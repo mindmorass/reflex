@@ -1,3 +1,9 @@
+---
+name: doc-sync
+description: Synchronize documentation between source code and external systems
+---
+
+
 # Doc Sync Skill
 
 > Keep documentation aligned with implementation through systematic drift detection and updates.
@@ -74,7 +80,9 @@ def extract_documented_signatures(doc_path: str) -> Dict[str, Dict]:
     signatures = {}
 
     # Find function sections
-    pattern = r'#{2,3}\s+`?(\w+)`?\s*\n([\s\S]*?)(?=\n#{2,3}|\Z)'
+    pattern = r'#{2,3}\s+`?(\w+)`?\s*
+([\s\S]*?)(?=
+#{2,3}|\Z)'
 
     for match in re.finditer(pattern, content):
         func_name = match.group(1)
@@ -217,7 +225,8 @@ def extract_cli_commands(entry_point: str) -> Dict[str, str]:
     # Pattern depends on CLI framework (click, argparse, etc.)
     pattern = r'^\s+(\w+)\s+(.+)$'
 
-    for line in result.stdout.split('\n'):
+    for line in result.stdout.split('
+'):
         match = re.match(pattern, line)
         if match:
             commands[match.group(1)] = match.group(2).strip()
@@ -233,7 +242,9 @@ def extract_documented_commands(doc_path: str) -> Dict[str, str]:
     commands = {}
 
     # Look for command sections: ### command-name or `command-name`
-    pattern = r'#{2,3}\s+`?(\w+)`?\s*\n([^\n#]+)'
+    pattern = r'#{2,3}\s+`?(\w+)`?\s*
+([^
+#]+)'
 
     for match in re.finditer(pattern, content):
         commands[match.group(1)] = match.group(2).strip()
@@ -251,7 +262,8 @@ def generate_doc_update(drift: Dict, doc_path: str) -> str:
     updates = []
 
     if drift.get("missing_in_docs"):
-        updates.append("## New Functions to Document\n")
+        updates.append("## New Functions to Document
+")
         for func in drift["missing_in_docs"]:
             updates.append(f"""
 ### `{func}`
@@ -272,13 +284,16 @@ def generate_doc_update(drift: Dict, doc_path: str) -> str:
 """)
 
     if drift.get("undocumented"):
-        updates.append("\n## Environment Variables to Document\n")
+        updates.append("
+## Environment Variables to Document
+")
         updates.append("| Variable | Required | Default | Description |")
         updates.append("|----------|----------|---------|-------------|")
         for var in drift["undocumented"]:
             updates.append(f"| `{var}` | TODO | TODO | TODO |")
 
-    return "\n".join(updates)
+    return "
+".join(updates)
 ```
 
 ### Procedure 2: Automated Doc Sync Script
@@ -353,7 +368,8 @@ def validate_code_examples(doc_path: str) -> List[Dict]:
     errors = []
 
     # Find Python code blocks
-    pattern = r'```python\n([\s\S]*?)```'
+    pattern = r'```python
+([\s\S]*?)```'
 
     for i, match in enumerate(re.finditer(pattern, content)):
         code = match.group(1)

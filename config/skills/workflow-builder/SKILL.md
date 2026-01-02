@@ -1,3 +1,9 @@
+---
+name: workflow-builder
+description: Design and implement multi-step automation workflows
+---
+
+
 # Workflow Builder Skill
 
 > Build the YAML workflow engine for multi-step agent automation.
@@ -656,7 +662,8 @@ if __name__ == "__main__":
     test_workflow_validation()
     test_workflow_execution()
     test_list_workflows()
-    print("\n✅ All workflow tests passed!")
+    print("
+✅ All workflow tests passed!")
 ```
 
 ### Step 5: Create Example Workflow Template

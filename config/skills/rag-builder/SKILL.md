@@ -1,3 +1,9 @@
+---
+name: rag-builder
+description: Build Retrieval-Augmented Generation systems with vector databases
+---
+
+
 # RAG Builder Skill
 
 > Build the RAG (Retrieval-Augmented Generation) server using ChromaDB.
@@ -267,7 +273,8 @@ if __name__ == "__main__":
     test_chromadb()
     test_embeddings()
     test_server_init()
-    print("\n✅ All RAG tests passed!")
+    print("
+✅ All RAG tests passed!")
 ```
 
 ## Verification

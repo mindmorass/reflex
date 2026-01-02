@@ -1,3 +1,9 @@
+---
+name: github-harvester
+description: Extract and process data from GitHub repositories
+---
+
+
 # GitHub Harvester Skill
 
 > Extract and ingest content from GitHub repositories into RAG.
@@ -331,7 +337,8 @@ def chunk_readme(content: str) -> List[Dict]:
     sections = []
     current_section = {"heading": "Overview", "content": "", "level": 1}
 
-    for line in content.split('\n'):
+    for line in content.split('
+'):
         heading_match = re.match(r'^(#{1,3})\s+(.+)$', line)
 
         if heading_match:
@@ -343,7 +350,8 @@ def chunk_readme(content: str) -> List[Dict]:
             heading = heading_match.group(2)
             current_section = {"heading": heading, "content": "", "level": level}
         else:
-            current_section["content"] += line + "\n"
+            current_section["content"] += line + "
+"
 
     # Don't forget last section
     if current_section["content"].strip():
@@ -403,7 +411,9 @@ def chunk_issue(issue: Dict) -> List[Dict]:
 
     # Issue body as main chunk
     chunks.append({
-        "content": f"# {issue['title']}\n\n{issue['body']}",
+        "content": f"# {issue['title']}
+
+{issue['body']}",
         "type": "issue",
         "issue_number": issue["number"]
     })
@@ -584,7 +594,9 @@ async def harvest_github_repo(
                 }
 
                 await ingest(
-                    content=f"# {release['name']}\n\n{release['body']}",
+                    content=f"# {release['name']}
+
+{release['body']}",
                     collection=collection,
                     metadata=metadata,
                     doc_id=f"gh_{repo_name.replace('/', '_')}_release_{release['tag']}"

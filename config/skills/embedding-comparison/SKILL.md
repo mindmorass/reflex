@@ -1,3 +1,9 @@
+---
+name: embedding-comparison
+description: Compare and evaluate embedding models for semantic search
+---
+
+
 # Embedding Comparison Skill
 
 > Evaluate and compare different embedding models on your actual data.
@@ -217,7 +223,8 @@ def compute_metrics(
 
 def benchmark_model(model_name: str, dataset: Dict) -> Dict:
     """Benchmark a single model."""
-    print(f"\nBenchmarking: {model_name}")
+    print(f"
+Benchmarking: {model_name}")
 
     # Load model (time it)
     load_start = time.perf_counter()
@@ -271,7 +278,8 @@ def run_benchmark(dataset_path: str = "test_dataset.json") -> List[Dict]:
 
 def print_results_table(results: List[Dict]):
     """Print results as formatted table."""
-    print("\n" + "=" * 80)
+    print("
+" + "=" * 80)
     print("BENCHMARK RESULTS")
     print("=" * 80)
 
@@ -294,7 +302,8 @@ if __name__ == "__main__":
     # Save results
     with open("benchmark_results.json", "w") as f:
         json.dump(results, f, indent=2)
-    print("\nResults saved to benchmark_results.json")
+    print("
+Results saved to benchmark_results.json")
 ```
 
 ### Step 3: Side-by-Side Comparison
@@ -313,7 +322,8 @@ def compare_search(
     top_k: int = 3
 ):
     """Compare search results across models."""
-    print(f"\nQuery: {query}")
+    print(f"
+Query: {query}")
     print("=" * 60)
 
     for model_name in models:
@@ -332,7 +342,8 @@ def compare_search(
         # Get top results
         top_indices = np.argsort(sims)[-top_k:][::-1]
 
-        print(f"\n{model_name}:")
+        print(f"
+{model_name}:")
         for rank, idx in enumerate(top_indices, 1):
             print(f"  {rank}. [{sims[idx]:.3f}] {documents[idx][:60]}...")
 

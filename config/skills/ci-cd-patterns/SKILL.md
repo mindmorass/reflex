@@ -1,3 +1,9 @@
+---
+name: ci-cd-patterns
+description: Design and implement effective continuous integration and deployment pipelines.
+---
+
+
 # CI/CD Patterns Skill
 
 ## Purpose

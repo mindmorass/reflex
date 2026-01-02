@@ -1,3 +1,9 @@
+---
+name: graphviz-diagrams
+description: Create complex graph visualizations using Graphviz DOT language, with both source code and pre-rendered images.
+---
+
+
 # Graphviz Diagrams Skill
 
 ## Purpose
@@ -150,7 +156,8 @@ digraph G {
 
     // Individual node styling
     A [label="Start", shape=ellipse, fillcolor=green];
-    B [label="Process\nData", shape=box];
+    B [label="Process
+Data", shape=box];
     C [label="Decision", shape=diamond, fillcolor=yellow];
     D [label="End", shape=ellipse, fillcolor=red];
 
@@ -359,7 +366,8 @@ graph Network {
     // Nodes
     internet [shape=cloud, label="Internet"];
     firewall [shape=box3d, label="Firewall"];
-    lb [label="Load\nBalancer"];
+    lb [label="Load
+Balancer"];
     web1 [label="Web 1"];
     web2 [label="Web 2"];
     app1 [label="App 1"];

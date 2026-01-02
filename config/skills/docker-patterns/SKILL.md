@@ -1,3 +1,9 @@
+---
+name: docker-patterns
+description: Best practices for containerizing applications with Docker.
+---
+
+
 # Docker Patterns Skill
 
 ## Purpose

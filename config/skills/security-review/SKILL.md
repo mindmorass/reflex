@@ -1,3 +1,9 @@
+---
+name: security-review
+description: Systematic security analysis patterns for identifying vulnerabilities in code and configurations.
+---
+
+
 # Security Review Skill
 
 ## Purpose

@@ -1,3 +1,9 @@
+---
+name: code-review-patterns
+description: Systematic patterns for reviewing code to catch bugs, security issues, and quality problems.
+---
+
+
 # Code Review Patterns Skill
 
 ## Purpose

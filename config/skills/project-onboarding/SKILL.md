@@ -1,3 +1,9 @@
+---
+name: project-onboarding
+description: Onboard new projects with standardized configuration and documentation
+---
+
+
 # Project Onboarding Skill
 
 > Quickly onboard a new project into the agentic workspace with RAG collections, routing rules, and baseline knowledge.

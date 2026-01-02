@@ -1,3 +1,9 @@
+---
+name: agent-builder
+description: Build specialized sub-agents for the workflow system
+---
+
+
 # Agent Builder Skill
 
 > Build specialized sub-agents for the workflow system.

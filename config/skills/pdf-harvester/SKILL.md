@@ -1,3 +1,9 @@
+---
+name: pdf-harvester
+description: Extract text and data from PDF documents
+---
+
+
 # PDF Harvester Skill
 
 > Extract and ingest PDF documents into RAG with proper text extraction, table handling, and metadata.
@@ -100,12 +106,15 @@ def table_to_markdown(table: List[List]) -> str:
     def clean_cell(cell):
         if cell is None:
             return ""
-        return str(cell).replace("\n", " ").strip()
+        return str(cell).replace("
+", " ").strip()
 
     # Header row
     headers = [clean_cell(c) for c in table[0]]
-    md = "| " + " | ".join(headers) + " |\n"
-    md += "| " + " | ".join(["---"] * len(headers)) + " |\n"
+    md = "| " + " | ".join(headers) + " |
+"
+    md += "| " + " | ".join(["---"] * len(headers)) + " |
+"
 
     # Data rows
     for row in table[1:]:
@@ -113,7 +122,8 @@ def table_to_markdown(table: List[List]) -> str:
         # Pad if necessary
         while len(cells) < len(headers):
             cells.append("")
-        md += "| " + " | ".join(cells[:len(headers)]) + " |\n"
+        md += "| " + " | ".join(cells[:len(headers)]) + " |
+"
 
     return md
 ```
@@ -278,7 +288,9 @@ def chunk_by_pages(
     for i in range(0, len(pages), pages_per_chunk):
         page_group = pages[i:i + pages_per_chunk]
 
-        text = "\n\n".join(p["text"] for p in page_group)
+        text = "
+
+".join(p["text"] for p in page_group)
 
         chunks.append({
             "content": text,
@@ -308,13 +320,16 @@ def chunk_by_sections(
             r'^(Abstract|Introduction|Conclusion|References)',
         ]
 
-    full_text = "\n\n".join(p["text"] for p in extracted["pages"])
+    full_text = "
+
+".join(p["text"] for p in extracted["pages"])
 
     # Find section boundaries
     sections = []
     current_section = {"title": "Introduction", "content": "", "start_pos": 0}
 
-    lines = full_text.split("\n")
+    lines = full_text.split("
+")
 
     for line in lines:
         is_heading = any(
@@ -330,7 +345,8 @@ def chunk_by_sections(
                 "start_pos": len(sections)
             }
         else:
-            current_section["content"] += line + "\n"
+            current_section["content"] += line + "
+"
 
     # Don't forget last section
     if current_section["content"].strip():
@@ -357,10 +373,14 @@ def chunk_by_paragraphs(
     overlap: int = 50
 ) -> List[Dict]:
     """Chunk by paragraphs with overlap."""
-    full_text = "\n\n".join(p["text"] for p in extracted["pages"])
+    full_text = "
+
+".join(p["text"] for p in extracted["pages"])
 
     # Split into paragraphs
-    paragraphs = [p.strip() for p in full_text.split("\n\n") if p.strip()]
+    paragraphs = [p.strip() for p in full_text.split("
+
+") if p.strip()]
 
     chunks = []
     current_chunk = []
@@ -372,7 +392,9 @@ def chunk_by_paragraphs(
         if current_size + para_size > max_chunk_size and current_chunk:
             # Save current chunk
             chunks.append({
-                "content": "\n\n".join(current_chunk),
+                "content": "
+
+".join(current_chunk),
                 "chunk_index": len(chunks),
                 "word_count": current_size
             })
@@ -388,7 +410,9 @@ def chunk_by_paragraphs(
     # Last chunk
     if current_chunk:
         chunks.append({
-            "content": "\n\n".join(current_chunk),
+            "content": "
+
+".join(current_chunk),
             "chunk_index": len(chunks),
             "word_count": current_size
         })
@@ -408,7 +432,8 @@ def extract_academic_paper(pdf_path: str) -> Dict:
     Identifies: title, authors, abstract, sections, references
     """
     extracted = extract_pdf_text(pdf_path)
-    full_text = "\n".join(p["text"] for p in extracted["pages"])
+    full_text = "
+".join(p["text"] for p in extracted["pages"])
 
     paper = {
         "title": "",
@@ -420,7 +445,8 @@ def extract_academic_paper(pdf_path: str) -> Dict:
     }
 
     # Title is usually first large text
-    lines = full_text.split("\n")
+    lines = full_text.split("
+")
     for line in lines[:10]:
         if len(line) > 20 and len(line) < 200:
             paper["title"] = line.strip()
@@ -428,7 +454,11 @@ def extract_academic_paper(pdf_path: str) -> Dict:
 
     # Abstract
     abstract_match = re.search(
-        r'Abstract[:\s]*\n?(.*?)(?=\n(?:1\.?\s+)?Introduction|\n\n[A-Z])',
+        r'Abstract[:\s]*
+?(.*?)(?=
+(?:1\.?\s+)?Introduction|
+
+[A-Z])',
         full_text,
         re.DOTALL | re.IGNORECASE
     )
@@ -436,7 +466,10 @@ def extract_academic_paper(pdf_path: str) -> Dict:
         paper["abstract"] = abstract_match.group(1).strip()
 
     # Sections
-    section_pattern = r'\n(\d+\.?\s+[A-Z][^\n]+)\n'
+    section_pattern = r'
+(\d+\.?\s+[A-Z][^
+]+)
+'
     section_matches = re.finditer(section_pattern, full_text)
 
     section_positions = [(m.group(1), m.start()) for m in section_matches]
@@ -452,7 +485,8 @@ def extract_academic_paper(pdf_path: str) -> Dict:
 
     # References section
     ref_match = re.search(
-        r'(?:References|Bibliography)\s*\n(.*?)$',
+        r'(?:References|Bibliography)\s*
+(.*?)$',
         full_text,
         re.DOTALL | re.IGNORECASE
     )

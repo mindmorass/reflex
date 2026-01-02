@@ -1,3 +1,9 @@
+---
+name: workspace-builder
+description: Set up and configure development workspaces
+---
+
+
 # Workspace Builder Skill
 
 > Master specification for building the agentic workflow system.
@@ -128,14 +134,6 @@ cd project-alpha
 
 ### Slash Command Template
 ```markdown
----
-name: command-name
-description: What this command does
-arguments:
-  - name: arg1
-    description: First argument
-    required: true
----
 
 # Command Name
 

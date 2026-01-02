@@ -1,3 +1,9 @@
+---
+name: router-builder
+description: Build intent routers for agent task distribution
+---
+
+
 # Router Builder Skill
 
 > Build the Semantic Router for intelligent resource selection.
@@ -426,7 +432,8 @@ def test_routing():
         ("run the workflow", Category.WORKFLOW, None),
     ]
     
-    print("Testing router...\n")
+    print("Testing router...
+")
     
     for query, expected_cat, expected_res in test_cases:
         result = route(query)

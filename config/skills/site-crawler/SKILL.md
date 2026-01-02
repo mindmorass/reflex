@@ -1,3 +1,9 @@
+---
+name: site-crawler
+description: Crawl and extract content from websites
+---
+
+
 # Site Crawler Skill
 
 > Respectfully crawl documentation sites and web content for RAG ingestion.
@@ -90,7 +96,8 @@ class RobotsChecker:
 
             if response.status_code == 200:
                 parser = RobotFileParser()
-                parser.parse(response.text.split("\n"))
+                parser.parse(response.text.split("
+"))
                 self.parsers[base_url] = parser
             else:
                 self.parsers[base_url] = None
@@ -601,7 +608,9 @@ async def harvest_site(
 
 def chunk_content(content: str, max_size: int = 500) -> List[str]:
     """Chunk content by paragraphs."""
-    paragraphs = content.split('\n\n')
+    paragraphs = content.split('
+
+')
     chunks = []
     current = []
     current_size = 0
@@ -610,7 +619,9 @@ def chunk_content(content: str, max_size: int = 500) -> List[str]:
         para_size = len(para.split())
 
         if current_size + para_size > max_size and current:
-            chunks.append('\n\n'.join(current))
+            chunks.append('
+
+'.join(current))
             current = []
             current_size = 0
 
@@ -618,7 +629,9 @@ def chunk_content(content: str, max_size: int = 500) -> List[str]:
         current_size += para_size
 
     if current:
-        chunks.append('\n\n'.join(current))
+        chunks.append('
+
+'.join(current))
 
     return chunks
 ```

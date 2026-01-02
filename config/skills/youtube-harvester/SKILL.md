@@ -1,3 +1,9 @@
+---
+name: youtube-harvester
+description: Extract transcripts and metadata from YouTube videos
+---
+
+
 # YouTube Harvester Skill
 
 > Extract and ingest YouTube video transcripts into RAG with proper chunking and metadata.
@@ -424,7 +430,8 @@ async def harvest_youtube_playlist(
         text=True
     )
 
-    video_ids = result.stdout.strip().split('\n')
+    video_ids = result.stdout.strip().split('
+')
 
     results = []
     for video_id in video_ids:
@@ -460,7 +467,8 @@ async def harvest_youtube_channel(
         text=True
     )
 
-    video_ids = result.stdout.strip().split('\n')
+    video_ids = result.stdout.strip().split('
+')
 
     results = []
     for video_id in video_ids:

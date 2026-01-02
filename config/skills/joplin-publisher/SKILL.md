@@ -1,3 +1,9 @@
+---
+name: joplin-publisher
+description: Import markdown documents and mermaid diagrams into Joplin using the Joplin CLI.
+---
+
+
 # Joplin Publisher Skill
 
 ## Purpose
@@ -65,7 +71,9 @@ joplin import /path/to/file.md --format md --notebook "Notebook Name"
 ### Create Note Directly
 ```bash
 # Create note from stdin
-echo "# Title\n\nContent" | joplin mknote "Note Title" --notebook "Notebook Name"
+echo "# Title
+
+Content" | joplin mknote "Note Title" --notebook "Notebook Name"
 
 # Create from file content
 cat file.md | joplin mknote "Note Title" --notebook "Notebook Name"
@@ -84,7 +92,8 @@ def notebook_exists(notebook: str) -> bool:
         capture_output=True,
         text=True
     )
-    notebooks = result.stdout.strip().split('\n')
+    notebooks = result.stdout.strip().split('
+')
     return notebook in notebooks
 
 def create_notebook_if_missing(notebook: str):
@@ -119,7 +128,8 @@ def prepare_markdown(
         ])
 
     lines.append(content)
-    return '\n'.join(lines)
+    return '
+'.join(lines)
 ```
 
 ### Step 3: Write Temporary File
@@ -214,9 +224,6 @@ More content.
 ```markdown
 # Note Title
 
----
-tags: research, api, documentation
----
 
 Content here.
 ```

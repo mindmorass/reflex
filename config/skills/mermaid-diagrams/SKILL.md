@@ -1,3 +1,9 @@
+---
+name: mermaid-diagrams
+description: Create clear, well-structured mermaid diagrams for documentation and visualization.
+---
+
+
 # Mermaid Diagrams Skill
 
 ## Purpose

@@ -1,3 +1,9 @@
+---
+name: prompt-template
+description: Create and manage reusable prompt templates
+---
+
+
 # Prompt Template Skill
 
 > Standardize prompt construction for agents with reusable, composable templates.
@@ -409,45 +415,60 @@ class PromptBuilder:
 
     def add_context(self, context: str) -> 'PromptBuilder':
         """Add context section."""
-        self.sections.append(f"## Context\n{context}")
+        self.sections.append(f"## Context
+{context}")
         return self
 
     def add_task(self, task: str) -> 'PromptBuilder':
         """Add task description."""
-        self.sections.append(f"## Task\n{task}")
+        self.sections.append(f"## Task
+{task}")
         return self
 
     def add_constraints(self, constraints: List[str]) -> 'PromptBuilder':
         """Add constraints."""
-        constraint_list = "\n".join(f"- {c}" for c in constraints)
-        self.sections.append(f"## Constraints\n{constraint_list}")
+        constraint_list = "
+".join(f"- {c}" for c in constraints)
+        self.sections.append(f"## Constraints
+{constraint_list}")
         return self
 
     def add_examples(self, examples: List[Dict]) -> 'PromptBuilder':
         """Add few-shot examples."""
-        example_text = "## Examples\n"
+        example_text = "## Examples
+"
         for i, ex in enumerate(examples, 1):
-            example_text += f"\n### Example {i}\n"
-            example_text += f"Input: {ex['input']}\n"
-            example_text += f"Output: {ex['output']}\n"
+            example_text += f"
+### Example {i}
+"
+            example_text += f"Input: {ex['input']}
+"
+            example_text += f"Output: {ex['output']}
+"
         self.sections.append(example_text)
         return self
 
     def add_output_format(self, format_spec: str) -> 'PromptBuilder':
         """Add output format specification."""
-        self.sections.append(f"## Output Format\n{format_spec}")
+        self.sections.append(f"## Output Format
+{format_spec}")
         return self
 
     def add_rag_context(self, docs: List[str]) -> 'PromptBuilder':
         """Add RAG retrieved documents."""
         if docs:
-            doc_text = "\n\n".join(f"[{i+1}] {doc}" for i, doc in enumerate(docs))
-            self.sections.append(f"## Retrieved Context\n{doc_text}")
+            doc_text = "
+
+".join(f"[{i+1}] {doc}" for i, doc in enumerate(docs))
+            self.sections.append(f"## Retrieved Context
+{doc_text}")
         return self
 
     def build(self) -> str:
         """Build final prompt."""
-        return "\n\n".join(self.sections)
+        return "
+
+".join(self.sections)
 
 
 # Usage example

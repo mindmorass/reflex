@@ -1,3 +1,9 @@
+---
+name: task-decomposition
+description: Break down complex tasks into actionable, atomic steps that can be executed by individual agents.
+---
+
+
 # Task Decomposition Skill
 
 ## Purpose

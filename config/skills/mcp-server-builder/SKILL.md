@@ -1,3 +1,9 @@
+---
+name: mcp-server-builder
+description: Build Model Context Protocol servers for Claude Code integration
+---
+
+
 # MCP Server Builder Skill
 
 > Build new MCP servers following established patterns for consistency and reliability.
@@ -262,7 +268,8 @@ def test_quick():
 if __name__ == "__main__":
     test_imports()
     test_quick()
-    print("\n✅ All basic tests passed!")
+    print("
+✅ All basic tests passed!")
     print("Run 'pytest test_{name}.py -v' for full test suite")
 ```
 

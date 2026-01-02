@@ -1,3 +1,9 @@
+---
+name: obsidian-publisher
+description: Write markdown documents and mermaid diagrams to Obsidian vaults.
+---
+
+
 # Obsidian Publisher Skill
 
 ## Purpose
@@ -88,12 +94,15 @@ def build_content(content: str, frontmatter: dict = None) -> str:
     if frontmatter:
         import yaml
         fm_str = yaml.dump(frontmatter, default_flow_style=False)
-        return f"---\n{fm_str}---\n\n{content}"
+        return f"---
+{fm_str}---
+
+{content}"
     return content
 
 def sanitize_filename(name: str) -> str:
     """Remove or replace invalid filename characters."""
-    invalid_chars = '<>:"/\\|?*'
+    invalid_chars = '<>:"/\|?*'
     for char in invalid_chars:
         name = name.replace(char, '-')
     return name.strip()
@@ -114,14 +123,6 @@ More content.
 
 ### Note with Frontmatter
 ```markdown
----
-title: My Note
-date: 2024-01-15
-tags:
-  - research
-  - api
-status: draft
----
 
 # My Note
 
@@ -168,53 +169,18 @@ See also: [[projects/2024/related-project|Related Project]]
 
 ### Research Note
 ```yaml
----
-title: "Research: Topic Name"
-date: 2024-01-15
-source: "https://example.com/article"
-tags:
-  - research
-  - topic
-status: reviewed
-summary: "Brief summary of findings"
----
 ```
 
 ### Meeting Note
 ```yaml
----
-title: "Meeting: Project Sync"
-date: 2024-01-15
-attendees:
-  - Person A
-  - Person B
-type: meeting
-action_items: 3
----
 ```
 
 ### Documentation
 ```yaml
----
-title: "API Reference: Users"
-version: "1.0"
-last_updated: 2024-01-15
-tags:
-  - api
-  - documentation
----
 ```
 
 ### Diagram Document
 ```yaml
----
-title: "Architecture Diagram"
-diagram_type: flowchart
-created: 2024-01-15
-tags:
-  - architecture
-  - diagram
----
 ```
 
 ## Folder Organization Patterns

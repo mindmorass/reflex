@@ -1,3 +1,9 @@
+---
+name: test-patterns
+description: Patterns and best practices for writing effective, maintainable tests.
+---
+
+
 # Test Patterns Skill
 
 ## Purpose

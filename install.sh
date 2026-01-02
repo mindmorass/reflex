@@ -90,9 +90,8 @@ log "MCP servers configured in $CLAUDE_JSON"
 
 # Download CLAUDE.md as reference
 curl -fsSL "${BASE_URL}/CLAUDE.md" -o "${REFLEX_DIR}/CLAUDE.md"
-log "Downloaded reference docs to ${REFLEX_DIR}/CLAUDE.md"
 
-# Download skills
+# Download skills and append to CLAUDE.md
 SKILLS=(
   "agent-builder"
   "ci-cd-patterns"
@@ -125,12 +124,25 @@ SKILLS=(
   "youtube-harvester"
 )
 
-log "Downloading skills..."
+log "Downloading skills and appending to CLAUDE.md..."
+echo "" >> "${REFLEX_DIR}/CLAUDE.md"
+echo "---" >> "${REFLEX_DIR}/CLAUDE.md"
+echo "" >> "${REFLEX_DIR}/CLAUDE.md"
+echo "# Skills Reference" >> "${REFLEX_DIR}/CLAUDE.md"
+echo "" >> "${REFLEX_DIR}/CLAUDE.md"
+echo "The following skills provide patterns and guidance for common tasks." >> "${REFLEX_DIR}/CLAUDE.md"
+echo "" >> "${REFLEX_DIR}/CLAUDE.md"
+
 for skill in "${SKILLS[@]}"; do
-  mkdir -p "$REFLEX_DIR/skills/$skill"
-  curl -fsSL "${BASE_URL}/config/skills/${skill}/SKILL.md" -o "$REFLEX_DIR/skills/$skill/SKILL.md" 2>/dev/null || true
+  SKILL_CONTENT=$(curl -fsSL "${BASE_URL}/config/skills/${skill}/SKILL.md" 2>/dev/null || echo "")
+  if [ -n "$SKILL_CONTENT" ]; then
+    echo "" >> "${REFLEX_DIR}/CLAUDE.md"
+    echo "---" >> "${REFLEX_DIR}/CLAUDE.md"
+    echo "" >> "${REFLEX_DIR}/CLAUDE.md"
+    echo "$SKILL_CONTENT" >> "${REFLEX_DIR}/CLAUDE.md"
+  fi
 done
-log "Installed ${#SKILLS[@]} skills"
+log "Appended ${#SKILLS[@]} skills to CLAUDE.md"
 
 log ""
 log "Installation complete!"

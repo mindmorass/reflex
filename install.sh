@@ -91,6 +91,46 @@ log "MCP servers configured in $CLAUDE_JSON"
 curl -fsSL "${BASE_URL}/CLAUDE.md" -o "${REFLEX_DIR}/CLAUDE.md"
 log "Downloaded reference docs to ${REFLEX_DIR}/CLAUDE.md"
 
+# Download skills
+SKILLS=(
+  "agent-builder"
+  "ci-cd-patterns"
+  "code-review-patterns"
+  "collection-migration"
+  "doc-sync"
+  "docker-patterns"
+  "embedding-comparison"
+  "github-harvester"
+  "graphviz-diagrams"
+  "joplin-publisher"
+  "knowledge-ingestion-patterns"
+  "mcp-server-builder"
+  "mermaid-diagrams"
+  "microsoft-code-reference"
+  "microsoft-docs"
+  "obsidian-publisher"
+  "pdf-harvester"
+  "project-onboarding"
+  "prompt-template"
+  "rag-builder"
+  "router-builder"
+  "security-review"
+  "site-crawler"
+  "task-decomposition"
+  "test-patterns"
+  "troubleshooting"
+  "workflow-builder"
+  "workspace-builder"
+  "youtube-harvester"
+)
+
+log "Downloading skills..."
+for skill in "${SKILLS[@]}"; do
+  mkdir -p "$REFLEX_DIR/skills/$skill"
+  curl -fsSL "${BASE_URL}/config/skills/${skill}/SKILL.md" -o "$REFLEX_DIR/skills/$skill/SKILL.md" 2>/dev/null || true
+done
+log "Installed ${#SKILLS[@]} skills"
+
 log ""
 log "Installation complete!"
 log ""

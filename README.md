@@ -28,9 +28,9 @@ npm install -g reflex-claude-plugin
 ```
 
 This installs:
-- Slash commands to `~/.claude/commands/`
-- MCP servers to `~/.claude.json`
-- Creates `~/.reflex/` for logs and skills
+- Slash commands to `$CLAUDE_CONFIG_DIR/commands/` (defaults to `~/.claude/commands/`)
+- MCP servers to `$CLAUDE_CONFIG_DIR.json` (defaults to `~/.claude.json`)
+- Creates `$CLAUDE_CONFIG_DIR/reflex/` for logs and skills (defaults to `~/.claude/reflex/`)
 
 ### Manual Install (for development)
 

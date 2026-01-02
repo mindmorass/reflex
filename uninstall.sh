@@ -3,9 +3,11 @@ set -e
 
 # Reflex Claude Code Plugin Uninstaller
 
-COMMANDS_DIR="$HOME/.claude/commands"
-CLAUDE_JSON="$HOME/.claude.json"
-REFLEX_DIR="$HOME/.reflex"
+# Respect CLAUDE_CONFIG_DIR, fallback to ~/.claude
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+COMMANDS_DIR="$CLAUDE_DIR/commands"
+CLAUDE_JSON="${CLAUDE_DIR}.json"
+REFLEX_DIR="$CLAUDE_DIR/reflex"
 
 log() {
   echo "[reflex] $1"
@@ -59,7 +61,7 @@ if [ -f "$CLAUDE_JSON" ]; then
 fi
 
 # Optionally remove reflex directory
-read -p "Remove ~/.reflex directory? (y/N) " -n 1 -r
+read -p "Remove reflex data directory ($REFLEX_DIR)? (y/N) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   rm -rf "$REFLEX_DIR"

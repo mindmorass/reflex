@@ -1,4 +1,5 @@
-skills_base_path: "${REFLEX_SKILLS_PATH:-~/.reflex/skills}"
+# Skills base path: REFLEX_SKILLS_PATH takes precedence, then CLAUDE_CONFIG_DIR/reflex/skills, then ~/.claude/reflex/skills
+skills_base_path: "${REFLEX_SKILLS_PATH:-${CLAUDE_CONFIG_DIR:-~/.claude}/reflex/skills}"
 
 skills:
   - name: agent-builder

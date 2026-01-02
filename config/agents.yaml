@@ -7,8 +7,13 @@ agents:
   analyst:
     description: "Data analysis, metrics evaluation, pattern recognition"
     skills:
+      - collection-migration
       - embedding-comparison
+      - graphviz-diagrams
+      - joplin-publisher
       - knowledge-ingestion-patterns
+      - mermaid-diagrams
+      - obsidian-publisher
       - task-decomposition
       - troubleshooting
     mcp_servers: []
@@ -16,10 +21,24 @@ agents:
   coder:
     description: "Application code development and refactoring"
     skills:
-      - microsoft-code-reference
-      - test-patterns
-      - docker-patterns
+      - agent-builder
       - ci-cd-patterns
+      - code-review-patterns
+      - collection-migration
+      - doc-sync
+      - docker-patterns
+      - embedding-comparison
+      - knowledge-ingestion-patterns
+      - mcp-server-builder
+      - microsoft-code-reference
+      - project-onboarding
+      - prompt-template
+      - rag-builder
+      - router-builder
+      - security-review
+      - test-patterns
+      - troubleshooting
+      - workflow-builder
     mcp_servers:
       - github
       - git
@@ -50,10 +69,12 @@ agents:
   planner:
     description: "Task decomposition and project planning"
     skills:
-      - task-decomposition
+      - agent-builder
       - project-onboarding
-      - workflow-builder
       - router-builder
+      - task-decomposition
+      - workflow-builder
+      - workspace-builder
     mcp_servers:
       - atlassian
       - azure-devops
@@ -61,10 +82,13 @@ agents:
   researcher:
     description: "Investigation and documentation review"
     skills:
-      - microsoft-docs
-      - site-crawler
-      - knowledge-ingestion-patterns
       - embedding-comparison
+      - joplin-publisher
+      - knowledge-ingestion-patterns
+      - microsoft-code-reference
+      - microsoft-docs
+      - obsidian-publisher
+      - site-crawler
     mcp_servers:
       - microsoft-docs
 

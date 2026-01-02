@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[Reflex] Session started at '$(date -Iseconds) >> ~/.reflex/logs/sessions.log 2>/dev/null || true"
+            "command": "echo '[Reflex] Session started at '$(date -Iseconds) >> \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/reflex/logs/sessions.log\" 2>/dev/null || true"
           }
         ]
       }
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[Reflex] Session ended at '$(date -Iseconds) >> ~/.reflex/logs/sessions.log 2>/dev/null || true"
+            "command": "echo '[Reflex] Session ended at '$(date -Iseconds) >> \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/reflex/logs/sessions.log\" 2>/dev/null || true"
           }
         ]
       }

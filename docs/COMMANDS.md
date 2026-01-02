@@ -308,6 +308,7 @@ Some commands use environment variables:
 
 Configure in `.env`:
 ```bash
-REFLEX_LOG_PATH=~/.reflex/logs
+# Paths default to $CLAUDE_CONFIG_DIR/reflex/* (or ~/.claude/reflex/*)
+# REFLEX_LOG_PATH=~/.claude/reflex/logs
 REFLEX_AUDIT_FORMAT=json
 ```

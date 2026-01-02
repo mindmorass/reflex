@@ -11,7 +11,7 @@ BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 COMMANDS_DIR="$CLAUDE_DIR/commands"
 CLAUDE_JSON="${CLAUDE_DIR}.json"
-REFLEX_DIR="$HOME/.reflex"
+REFLEX_DIR="$CLAUDE_DIR/reflex"
 
 log() {
   echo "[reflex] $1"

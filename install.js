@@ -116,7 +116,13 @@ function install() {
     copyCommand(cmd);
   }
 
-  // Merge MCP servers into ~/.claude.json
+  // Create reflex data directories
+  const REFLEX_DIR = resolve(CLAUDE_DIR, 'reflex');
+  ensureDir(REFLEX_DIR);
+  ensureDir(resolve(REFLEX_DIR, 'skills'));
+  ensureDir(resolve(REFLEX_DIR, 'logs'));
+
+  // Merge MCP servers into claude config
   mergeMcpServers();
 
   log('');

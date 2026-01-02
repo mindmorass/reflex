@@ -1,27 +1,32 @@
 # Reflex - Claude Code Plugin
 
-Reflex is a comprehensive Claude Code plugin for orchestrating Application Development, Infrastructure as Code (IaC), and Data Engineering workflows.
+Reflex is a Claude Code plugin providing opinionated sub-agents and skills for application development, infrastructure, and data engineering workflows.
 
 ## Project Structure
 
-- `src/` - TypeScript source code
-- `config/` - YAML configuration files (agents, skills, hooks, MCP servers)
-- `dist/` - Compiled JavaScript output
-- `.claude/commands/` - Slash commands for Claude Code
+```
+reflex/
+├── .claude-plugin/plugin.json   # Plugin manifest
+├── agents/                      # 9 sub-agent definitions
+├── commands/                    # Slash commands
+├── skills/                      # 29 skill definitions
+├── .mcp.json                    # MCP server configurations
+└── docs/                        # Additional documentation
+```
 
-## Available Commands
+## Commands
 
-Run these slash commands in Claude Code:
-
-- `/reflex:gitconfig` - Display git configuration (use `-v` for verbose)
-- `/reflex:certcollect <url>` - Collect SSL certificates from a website
-- `/reflex:audit <on|off|status>` - Control session audit logging
-- `/reflex:agents` - List available Reflex agents
-- `/reflex:mcp` - List configured MCP servers
+| Command | Description |
+|---------|-------------|
+| `/reflex:agents` | List available agents |
+| `/reflex:skills` | List available skills |
+| `/reflex:task` | Route task to appropriate agent |
+| `/reflex:gitconfig` | Display git configuration |
+| `/reflex:certcollect` | Collect SSL certificates |
+| `/reflex:audit` | Control audit logging |
+| `/reflex:mcp` | List MCP servers |
 
 ## Agents
-
-Reflex provides 9 specialized agents:
 
 | Agent | Purpose |
 |-------|---------|
@@ -35,30 +40,15 @@ Reflex provides 9 specialized agents:
 | tester | Test generation, coverage analysis |
 | writer | Documentation, technical writing |
 
-## Development
+## Installation
 
-```bash
-npm install      # Install dependencies
-npm run build    # Compile TypeScript
-npm run dev      # Watch mode
-npm test         # Run tests
+**From marketplace:**
+```
+/plugin marketplace add mindmorass/reflex
+/plugin install reflex
 ```
 
-## CLI Usage
-
-The plugin can also be used as a standalone CLI:
-
+**Local development:**
 ```bash
-npm start -- gitconfig -v
-npm start -- agents
-npm start -- mcp
-npm start -- task "your task here"
+claude --plugin-dir /path/to/reflex
 ```
-
-## Configuration
-
-Copy `.env.example` to `.env` and configure:
-- Atlassian credentials (for Jira/Confluence)
-- GitHub token
-- Azure credentials
-- Azure DevOps PAT

@@ -1,13 +1,3 @@
-# Dependencies
-node_modules/
-
-# Build output
-dist/
-
-# Environment
-.env
-.env.local
-
 # Claude Code local files (personal, not shared)
 .claude/settings.local.json
 CLAUDE.local.md
@@ -22,14 +12,3 @@ Thumbs.db
 
 # Logs
 *.log
-logs/
-
-# ChromaDB local data
-.chromadb/
-
-# Test coverage
-coverage/
-
-# Cache
-.cache/
-*.tsbuildinfo

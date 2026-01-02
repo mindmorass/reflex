@@ -1,216 +1,102 @@
 # Reflex
 
-A comprehensive Claude Code plugin for orchestrating Application Development, Infrastructure as Code (IaC), and Data Engineering workflows.
-
-## Features
-
-- **9 Specialized Agents** - Analyst, Coder, DevOps, Harvester, Planner, Researcher, Reviewer, Tester, Writer
-- **12 MCP Servers** - Pre-configured integrations for GitHub, Azure, Atlassian, and more
-- **Intelligent Routing** - Automatic task routing to the appropriate agent
-- **Vector Storage** - ChromaDB-based caching and context management
-- **Audit Logging** - Session-level audit trails in JSON, Markdown, or text
+A Claude Code plugin providing opinionated sub-agents and skills for application development, infrastructure, and data engineering workflows.
 
 ## Installation
 
-### Quick Install (recommended)
+### From GitHub (recommended)
 
-Install globally with a single command:
-
-```bash
-# Option 1: Using curl
-curl -fsSL https://raw.githubusercontent.com/mindmorass/reflex/main/install.sh | bash
-
-# Option 2: Using npx (from GitHub)
-npx github:mindmorass/reflex
-
-# Option 3: Using npm (when published)
-npm install -g reflex-claude-plugin
+```
+/plugin marketplace add mindmorass/reflex
+/plugin install reflex
 ```
 
-This installs:
-- Slash commands to `$CLAUDE_CONFIG_DIR/commands/` (defaults to `~/.claude/commands/`)
-- MCP servers to `$CLAUDE_CONFIG_DIR.json` (defaults to `~/.claude.json`)
-- Creates `$CLAUDE_CONFIG_DIR/reflex/` for logs and skills (defaults to `~/.claude/reflex/`)
-
-### Manual Install (for development)
+### Local Development
 
 ```bash
-# Clone the repository
 git clone https://github.com/mindmorass/reflex.git
-cd reflex
-
-# Install dependencies and build
-npm install
-npm run build
-
-# Start Claude Code in this directory - commands are auto-discovered
-claude
+claude --plugin-dir /path/to/reflex
 ```
 
-### Uninstall
+## Features
 
-```bash
-# Using curl
-curl -fsSL https://raw.githubusercontent.com/mindmorass/reflex/main/uninstall.sh | bash
+### 9 Specialized Agents
 
-# Or using npx
-npx github:mindmorass/reflex --uninstall
-```
+| Agent | Purpose |
+|-------|---------|
+| `analyst` | Data analysis, pattern recognition, troubleshooting |
+| `coder` | Code development, refactoring, implementation |
+| `devops` | Infrastructure, CI/CD, deployments |
+| `harvester` | Data collection from web, APIs, documents |
+| `planner` | Task breakdown, project planning |
+| `researcher` | Investigation, documentation review |
+| `reviewer` | Code review, security review |
+| `tester` | Test generation, coverage analysis |
+| `writer` | Documentation, technical writing |
 
-### Environment Setup
+### 29 Skills
 
-Copy `.env.example` to `.env` and configure your credentials:
+Skills provide reusable knowledge for agents. Run `/reflex:skills` to list all available skills.
 
-```bash
-cp .env.example .env
-```
+Key skills include:
+- `mermaid-diagrams` - Create diagrams for documentation
+- `docker-patterns` - Container best practices
+- `ci-cd-patterns` - Pipeline configurations
+- `test-patterns` - Testing strategies
+- `security-review` - Security analysis
+- `microsoft-docs` - Microsoft documentation lookup
 
-Required for full functionality:
-- `ATLASSIAN_URL`, `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN` - Jira/Confluence
-- `GITHUB_TOKEN` - GitHub API access
-- `AZURE_SUBSCRIPTION_ID`, `AZURE_TENANT_ID` - Azure resources
-- `AZURE_DEVOPS_ORG`, `AZURE_DEVOPS_PAT` - Azure DevOps
-
-## Slash Commands
+### Commands
 
 | Command | Description |
 |---------|-------------|
-| `/reflex:gitconfig [-v]` | Display git configuration |
-| `/reflex:certcollect <url> [-v] [-c]` | Collect SSL certificates |
-| `/reflex:audit <on\|off\|status>` | Control audit logging |
 | `/reflex:agents` | List available agents |
+| `/reflex:skills` | List available skills |
+| `/reflex:task "<task>"` | Route task to appropriate agent |
+| `/reflex:gitconfig` | Display git configuration |
+| `/reflex:certcollect <url>` | Collect SSL certificates |
+| `/reflex:audit <on\|off\|status>` | Control audit logging |
 | `/reflex:mcp` | List MCP servers |
-| `/reflex:task "<task>" [-a agent]` | Route task to agent |
 
-## Agents
-
-| Agent | Purpose | MCP Servers |
-|-------|---------|-------------|
-| **analyst** | Data analysis, troubleshooting | - |
-| **coder** | Code development, refactoring | github, git |
-| **devops** | Infrastructure, CI/CD | azure, azure-devops, github |
-| **harvester** | Data collection | markitdown |
-| **planner** | Task breakdown, planning | atlassian, azure-devops |
-| **researcher** | Investigation, docs review | microsoft-docs |
-| **reviewer** | Code/security review | github |
-| **tester** | Test generation, QA | playwright |
-| **writer** | Documentation | - |
-
-## MCP Servers
+### MCP Servers
 
 Pre-configured in `.mcp.json`:
 
-| Server | Type | Purpose |
-|--------|------|---------|
-| atlassian | stdio | Jira/Confluence |
-| git | stdio | Local git |
-| github | http | GitHub API |
-| microsoft-docs | http | MS Learn docs |
-| azure | stdio | Azure resources |
-| azure-devops | stdio | Azure DevOps |
-| markitdown | stdio | Document conversion |
-| sql-server | stdio | SQL queries |
-| playwright | stdio | Browser testing |
-| devbox | stdio | Dev environments |
-| azure-ai-foundry | stdio | Azure AI |
-| m365-agents | stdio | Microsoft 365 |
-
-## CLI Usage
-
-Can also be used as a standalone CLI:
-
-```bash
-# Display git config
-npm start -- gitconfig -v
-
-# List agents
-npm start -- agents
-
-# List MCP servers
-npm start -- mcp
-
-# Route a task
-npm start -- task "implement user authentication"
-
-# Collect certificates
-npm start -- certcollect github.com -v -c
-
-# Audit control
-npm start -- audit on
-npm start -- audit status
-npm start -- audit off
-```
+| Server | Purpose |
+|--------|---------|
+| atlassian | Jira/Confluence |
+| git | Local git operations |
+| github | GitHub API |
+| microsoft-docs | MS Learn documentation |
+| azure | Azure resources |
+| azure-devops | Azure DevOps |
+| markitdown | Document conversion |
+| sql-server | SQL queries |
+| playwright | Browser testing |
+| azure-ai-foundry | Azure AI |
+| m365-agents | Microsoft 365 |
 
 ## Project Structure
 
 ```
 reflex/
-├── .claude/
-│   ├── commands/           # Slash command definitions
-│   └── settings.json       # Hooks configuration
-├── .mcp.json               # MCP server configurations
-├── CLAUDE.md               # Project memory for Claude
-├── config/
-│   ├── agents.yaml         # Agent definitions
-│   ├── skills.yaml         # Skill mappings
-│   ├── hooks.yaml          # Hook handlers
-│   └── mcp-servers.yaml    # MCP server configs
-├── src/
-│   ├── agents/             # 9 agent implementations
-│   ├── commands/           # CLI commands
-│   ├── hooks/              # Hook handlers
-│   ├── mcp/                # MCP server manager
-│   ├── skills/             # Skill registry & loader
-│   ├── storage/            # ChromaDB integration
-│   ├── types/              # TypeScript types
-│   ├── utils/              # Utilities
-│   ├── orchestrator.ts     # Central orchestration
-│   └── index.ts            # Entry point
-└── dist/                   # Compiled output
+├── .claude-plugin/
+│   └── plugin.json      # Plugin manifest
+├── agents/              # 9 sub-agent definitions
+├── commands/            # Slash commands
+├── skills/              # 29 skill definitions
+├── .mcp.json            # MCP server configurations
+└── docs/                # Additional documentation
 ```
 
-## Development
+## How It Works
 
-```bash
-# Install dependencies
-npm install
+Reflex agents are Claude Code sub-agents with bound skills and tool access. When you use `/reflex:task`, the task router analyzes your request and delegates to the most appropriate agent.
 
-# Build
-npm run build
-
-# Watch mode
-npm run dev
-
-# Run tests
-npm test
-```
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Claude Code                             │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
-│  │   Slash     │  │    MCP      │  │       Hooks         │  │
-│  │  Commands   │  │  Servers    │  │                     │  │
-│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
-└─────────┼────────────────┼─────────────────────┼────────────┘
-          │                │                     │
-          ▼                ▼                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      Orchestrator                            │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │                    Agent Router                      │    │
-│  │  analyst│coder│devops│harvester│planner│researcher  │    │
-│  │         reviewer│tester│writer                       │    │
-│  └─────────────────────────────────────────────────────┘    │
-│                           │                                  │
-│  ┌────────────┐  ┌────────┴────────┐  ┌─────────────────┐   │
-│  │   Skills   │  │   Hook Manager  │  │    ChromaDB     │   │
-│  │  Registry  │  │                 │  │  Vector Store   │   │
-│  └────────────┘  └─────────────────┘  └─────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-```
+Each agent has:
+- **Tools**: Specific Claude Code tools they can use (Read, Write, Bash, etc.)
+- **Skills**: Knowledge domains they can reference
+- **Handoff guidance**: Suggestions for which agent should handle the next step
 
 ## License
 

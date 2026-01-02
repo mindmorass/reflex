@@ -1,0 +1,92 @@
+skills_base_path: "${REFLEX_SKILLS_PATH:-~/.reflex/skills}"
+
+skills:
+  - name: agent-builder
+    path: agent-builder/
+
+  - name: ci-cd-patterns
+    path: ci-cd-patterns/
+
+  - name: code-review-patterns
+    path: code-review-patterns/
+
+  - name: collection-migration
+    path: collection-migration/
+
+  - name: doc-sync
+    path: doc-sync/
+
+  - name: docker-patterns
+    path: docker-patterns/
+
+  - name: embedding-comparison
+    path: embedding-comparison/
+
+  - name: github-harvester
+    path: github-harvester/
+
+  - name: graphviz-diagrams
+    path: graphviz-diagrams/
+
+  - name: joplin-publisher
+    path: joplin-publisher/
+
+  - name: knowledge-ingestion-patterns
+    path: knowledge-ingestion-patterns/
+
+  - name: local
+    path: local/
+
+  - name: mcp-server-builder
+    path: mcp-server-builder/
+
+  - name: mermaid-diagrams
+    path: mermaid-diagrams/
+
+  - name: microsoft-code-reference
+    path: microsoft-code-reference/
+
+  - name: microsoft-docs
+    path: microsoft-docs/
+
+  - name: obsidian-publisher
+    path: obsidian-publisher/
+
+  - name: pdf-harvester
+    path: pdf-harvester/
+
+  - name: project-onboarding
+    path: project-onboarding/
+
+  - name: prompt-template
+    path: prompt-template/
+
+  - name: rag-builder
+    path: rag-builder/
+
+  - name: router-builder
+    path: router-builder/
+
+  - name: security-review
+    path: security-review/
+
+  - name: site-crawler
+    path: site-crawler/
+
+  - name: task-decomposition
+    path: task-decomposition/
+
+  - name: test-patterns
+    path: test-patterns/
+
+  - name: troubleshooting
+    path: troubleshooting/
+
+  - name: workflow-builder
+    path: workflow-builder/
+
+  - name: workspace-builder
+    path: workspace-builder/
+
+  - name: youtube-harvester
+    path: youtube-harvester/

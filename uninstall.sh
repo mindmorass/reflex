@@ -1,0 +1,70 @@
+#!/bin/bash
+set -e
+
+# Reflex Claude Code Plugin Uninstaller
+
+COMMANDS_DIR="$HOME/.claude/commands"
+CLAUDE_JSON="$HOME/.claude.json"
+REFLEX_DIR="$HOME/.reflex"
+
+log() {
+  echo "[reflex] $1"
+}
+
+log "Uninstalling Reflex from Claude Code..."
+
+# Remove slash commands
+COMMANDS=(
+  "reflex:gitconfig.md"
+  "reflex:certcollect.md"
+  "reflex:audit.md"
+  "reflex:agents.md"
+  "reflex:mcp.md"
+  "reflex:task.md"
+)
+
+for cmd in "${COMMANDS[@]}"; do
+  if [ -f "${COMMANDS_DIR}/${cmd}" ]; then
+    rm "${COMMANDS_DIR}/${cmd}"
+    log "Removed command: ${cmd}"
+  fi
+done
+
+# Remove MCP servers (those prefixed with reflex-)
+if [ -f "$CLAUDE_JSON" ]; then
+  if command -v node &> /dev/null; then
+    node -e "
+      const fs = require('fs');
+      const config = JSON.parse(fs.readFileSync('$CLAUDE_JSON', 'utf-8'));
+      if (config.mcpServers) {
+        let removed = 0;
+        for (const name of Object.keys(config.mcpServers)) {
+          if (name.startsWith('reflex-')) {
+            delete config.mcpServers[name];
+            removed++;
+          }
+        }
+        fs.writeFileSync('$CLAUDE_JSON', JSON.stringify(config, null, 2));
+        console.log('Removed ' + removed + ' MCP servers');
+      }
+    "
+  elif command -v jq &> /dev/null; then
+    jq 'if .mcpServers then .mcpServers |= with_entries(select(.key | startswith("reflex-") | not)) else . end' "$CLAUDE_JSON" > "$CLAUDE_JSON.tmp"
+    mv "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"
+    log "Removed reflex MCP servers"
+  else
+    log "Warning: Could not remove MCP servers (install node or jq)"
+    log "Manual removal required from $CLAUDE_JSON"
+  fi
+fi
+
+# Optionally remove reflex directory
+read -p "Remove ~/.reflex directory? (y/N) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  rm -rf "$REFLEX_DIR"
+  log "Removed $REFLEX_DIR"
+fi
+
+log ""
+log "Uninstallation complete!"

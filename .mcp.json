@@ -1,0 +1,67 @@
+{
+  "mcpServers": {
+    "atlassian": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-atlassian"],
+      "env": {
+        "ATLASSIAN_URL": "${ATLASSIAN_URL}",
+        "ATLASSIAN_EMAIL": "${ATLASSIAN_EMAIL}",
+        "ATLASSIAN_API_TOKEN": "${ATLASSIAN_API_TOKEN}"
+      }
+    },
+    "git": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-git"]
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "microsoft-docs": {
+      "type": "http",
+      "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "azure": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure/azure-mcp@latest"]
+    },
+    "azure-devops": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@microsoft/mcp-azure-devops@latest"]
+    },
+    "markitdown": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@microsoft/mcp-markitdown@latest"]
+    },
+    "sql-server": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start", "--namespace", "sql"]
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@microsoft/mcp-playwright@latest"]
+    },
+    "devbox": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@microsoft/mcp-devbox@latest"]
+    },
+    "azure-ai-foundry": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--prerelease=allow", "--from", "git+https://github.com/azure-ai-foundry/mcp-foundry.git", "run-azure-ai-foundry-mcp"]
+    },
+    "m365-agents": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@microsoft/m365agentstoolkit-mcp@latest", "server", "start"]
+    }
+  }
+}

@@ -176,6 +176,22 @@ function install() {
     log(`Installed ${skillCount} skills to ${CLAUDE_SKILLS_DIR}`);
   }
 
+  // Copy agents to ~/.claude/agents/ (Claude Code's agent discovery location)
+  const CLAUDE_AGENTS_DIR = resolve(CLAUDE_DIR, 'agents');
+  const srcAgentsDir = resolve(__dirname, '.claude', 'agents');
+
+  if (existsSync(srcAgentsDir)) {
+    ensureDir(CLAUDE_AGENTS_DIR);
+    const agentFiles = readdirSync(srcAgentsDir).filter(f => f.endsWith('.md'));
+
+    for (const agentFile of agentFiles) {
+      const srcPath = join(srcAgentsDir, agentFile);
+      const destPath = join(CLAUDE_AGENTS_DIR, agentFile);
+      copyFileSync(srcPath, destPath);
+    }
+    log(`Installed ${agentFiles.length} agents to ${CLAUDE_AGENTS_DIR}`);
+  }
+
   // Merge MCP servers into claude config
   mergeMcpServers();
 
@@ -238,6 +254,26 @@ function uninstall() {
     }
     if (removedCount > 0) {
       log(`Removed ${removedCount} skills from ${CLAUDE_SKILLS_DIR}`);
+    }
+  }
+
+  // Remove agents from ~/.claude/agents/
+  const CLAUDE_AGENTS_DIR = resolve(CLAUDE_DIR, 'agents');
+  const srcAgentsDir = resolve(__dirname, '.claude', 'agents');
+
+  if (existsSync(srcAgentsDir) && existsSync(CLAUDE_AGENTS_DIR)) {
+    const agentFiles = readdirSync(srcAgentsDir).filter(f => f.endsWith('.md'));
+
+    let removedAgents = 0;
+    for (const agentFile of agentFiles) {
+      const destPath = join(CLAUDE_AGENTS_DIR, agentFile);
+      if (existsSync(destPath)) {
+        unlinkSync(destPath);
+        removedAgents++;
+      }
+    }
+    if (removedAgents > 0) {
+      log(`Removed ${removedAgents} agents from ${CLAUDE_AGENTS_DIR}`);
     }
   }
 

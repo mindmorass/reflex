@@ -106,6 +106,31 @@ if [ $removed_count -gt 0 ]; then
   log "Removed $removed_count skills from $SKILLS_DIR"
 fi
 
+# Remove agents from ~/.claude/agents/
+AGENTS_DIR="$CLAUDE_DIR/agents"
+AGENTS=(
+  "analyst"
+  "coder"
+  "devops"
+  "harvester"
+  "planner"
+  "researcher"
+  "reviewer"
+  "tester"
+  "writer"
+)
+
+removed_agents=0
+for agent in "${AGENTS[@]}"; do
+  if [ -f "$AGENTS_DIR/${agent}.md" ]; then
+    rm "$AGENTS_DIR/${agent}.md"
+    ((removed_agents++))
+  fi
+done
+if [ $removed_agents -gt 0 ]; then
+  log "Removed $removed_agents agents from $AGENTS_DIR"
+fi
+
 # Optionally remove reflex directory
 read -p "Remove reflex data directory ($REFLEX_DIR)? (y/N) " -n 1 -r
 echo

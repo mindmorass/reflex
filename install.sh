@@ -136,6 +136,29 @@ for skill in "${SKILLS[@]}"; do
 done
 log "Installed ${#SKILLS[@]} skills to ${SKILLS_DIR}"
 
+# Agents directory (Claude Code's agent discovery location)
+AGENTS_DIR="$CLAUDE_DIR/agents"
+mkdir -p "$AGENTS_DIR"
+
+# Download agents to ~/.claude/agents/
+AGENTS=(
+  "analyst"
+  "coder"
+  "devops"
+  "harvester"
+  "planner"
+  "researcher"
+  "reviewer"
+  "tester"
+  "writer"
+)
+
+log "Downloading agents to ${AGENTS_DIR}..."
+for agent in "${AGENTS[@]}"; do
+  curl -fsSL "${BASE_URL}/.claude/agents/${agent}.md" -o "$AGENTS_DIR/${agent}.md" 2>/dev/null || true
+done
+log "Installed ${#AGENTS[@]} agents to ${AGENTS_DIR}"
+
 log ""
 log "Installation complete!"
 log ""

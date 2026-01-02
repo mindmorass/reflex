@@ -2,9 +2,9 @@
 set -e
 
 # Reflex Claude Code Plugin Installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/yourname/reflex/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/mindmorass/reflex/main/install.sh | bash
 
-REPO="yourname/reflex"
+REPO="mindmorass/reflex"
 BRANCH="main"
 BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 

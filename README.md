@@ -18,10 +18,10 @@ Install globally with a single command:
 
 ```bash
 # Option 1: Using curl
-curl -fsSL https://raw.githubusercontent.com/yourname/reflex/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/mindmorass/reflex/main/install.sh | bash
 
 # Option 2: Using npx (from GitHub)
-npx github:yourname/reflex
+npx github:mindmorass/reflex
 
 # Option 3: Using npm (when published)
 npm install -g reflex-claude-plugin
@@ -36,7 +36,7 @@ This installs:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourname/reflex.git
+git clone https://github.com/mindmorass/reflex.git
 cd reflex
 
 # Install dependencies and build
@@ -51,10 +51,10 @@ claude
 
 ```bash
 # Using curl
-curl -fsSL https://raw.githubusercontent.com/yourname/reflex/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/mindmorass/reflex/main/uninstall.sh | bash
 
 # Or using npx
-npx github:yourname/reflex --uninstall
+npx github:mindmorass/reflex --uninstall
 ```
 
 ### Environment Setup

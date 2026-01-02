@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, unlinkSync, readdirSync, statSync, rmSync } from 'fs';
 import { homedir } from 'os';
-import { resolve, dirname, basename } from 'path';
+import { resolve, dirname, basename, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,6 +25,31 @@ function ensureDir(dir) {
     mkdirSync(dir, { recursive: true });
     log(`Created directory: ${dir}`);
   }
+}
+
+function copyDirRecursive(src, dest) {
+  if (!existsSync(src)) {
+    return 0;
+  }
+
+  ensureDir(dest);
+  let count = 0;
+
+  const entries = readdirSync(src);
+  for (const entry of entries) {
+    const srcPath = join(src, entry);
+    const destPath = join(dest, entry);
+    const stat = statSync(srcPath);
+
+    if (stat.isDirectory()) {
+      count += copyDirRecursive(srcPath, destPath);
+    } else {
+      copyFileSync(srcPath, destPath);
+      count++;
+    }
+  }
+
+  return count;
 }
 
 function copyCommand(filename) {
@@ -119,8 +144,18 @@ function install() {
   // Create reflex data directories
   const REFLEX_DIR = resolve(CLAUDE_DIR, 'reflex');
   ensureDir(REFLEX_DIR);
-  ensureDir(resolve(REFLEX_DIR, 'skills'));
   ensureDir(resolve(REFLEX_DIR, 'logs'));
+
+  // Copy skills from config/skills to target
+  const srcSkills = resolve(__dirname, 'config', 'skills');
+  const destSkills = resolve(REFLEX_DIR, 'skills');
+  const skillFiles = copyDirRecursive(srcSkills, destSkills);
+  if (skillFiles > 0) {
+    log(`Installed ${skillFiles} skill files to ${destSkills}`);
+  } else {
+    ensureDir(destSkills);
+    log('No skills found to install');
+  }
 
   // Merge MCP servers into claude config
   mergeMcpServers();
@@ -162,6 +197,13 @@ function uninstall() {
 
   // Remove MCP servers
   removeMcpServers();
+
+  // Remove reflex directory (skills, logs, etc.)
+  const REFLEX_DIR = resolve(CLAUDE_DIR, 'reflex');
+  if (existsSync(REFLEX_DIR)) {
+    rmSync(REFLEX_DIR, { recursive: true, force: true });
+    log(`Removed reflex directory: ${REFLEX_DIR}`);
+  }
 
   log('Uninstallation complete!');
 }

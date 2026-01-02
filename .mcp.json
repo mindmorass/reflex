@@ -62,6 +62,16 @@
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@microsoft/m365agentstoolkit-mcp@latest", "server", "start"]
+    },
+    "chroma": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--python", "3.12",
+        "chroma-mcp",
+        "--client-type", "persistent",
+        "--data-dir", "${HOME}/.chroma-data"
+      ]
     }
   }
 }

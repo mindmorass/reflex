@@ -1,300 +1,34 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, unlinkSync, readdirSync, statSync, rmSync } from 'fs';
-import { homedir } from 'os';
-import { resolve, dirname, basename, join } from 'path';
-import { fileURLToPath } from 'url';
+/**
+ * Reflex Claude Code Plugin
+ *
+ * This is now an official Claude Code plugin.
+ *
+ * Installation options:
+ *
+ * 1. Local testing:
+ *    claude --plugin-dir /path/to/reflex
+ *
+ * 2. Add as a marketplace and install:
+ *    /plugin marketplace add mindmorass/reflex
+ *    /plugin install reflex
+ *
+ * 3. Direct plugin installation (if already in a marketplace):
+ *    /plugin install reflex
+ *
+ * For more info: https://github.com/mindmorass/reflex
+ */
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const CLAUDE_CONFIG_BASE = process.env.CLAUDE_CONFIG_DIR || resolve(homedir(), '.claude');
-const CLAUDE_DIR = CLAUDE_CONFIG_BASE;
-const CLAUDE_COMMANDS_DIR = resolve(CLAUDE_DIR, 'commands');
-const CLAUDE_JSON = resolve(dirname(CLAUDE_CONFIG_BASE), basename(CLAUDE_CONFIG_BASE) + '.json');
-
-const isAuto = process.argv.includes('--auto');
-const isUninstall = process.argv.includes('--uninstall');
-
-function log(msg) {
-  console.log(`[reflex] ${msg}`);
-}
-
-function ensureDir(dir) {
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-    log(`Created directory: ${dir}`);
-  }
-}
-
-function copyDirRecursive(src, dest) {
-  if (!existsSync(src)) {
-    return 0;
-  }
-
-  ensureDir(dest);
-  let count = 0;
-
-  const entries = readdirSync(src);
-  for (const entry of entries) {
-    const srcPath = join(src, entry);
-    const destPath = join(dest, entry);
-    const stat = statSync(srcPath);
-
-    if (stat.isDirectory()) {
-      count += copyDirRecursive(srcPath, destPath);
-    } else {
-      copyFileSync(srcPath, destPath);
-      count++;
-    }
-  }
-
-  return count;
-}
-
-function copyCommand(filename) {
-  const src = resolve(__dirname, '.claude', 'commands', filename);
-  const dest = resolve(CLAUDE_COMMANDS_DIR, filename);
-
-  if (existsSync(src)) {
-    copyFileSync(src, dest);
-    log(`Installed command: ${filename}`);
-  }
-}
-
-function mergeMcpServers() {
-  const srcMcp = resolve(__dirname, '.mcp.json');
-
-  if (!existsSync(srcMcp)) {
-    log('No .mcp.json found in package');
-    return;
-  }
-
-  const srcConfig = JSON.parse(readFileSync(srcMcp, 'utf-8'));
-
-  let destConfig = { mcpServers: {} };
-  if (existsSync(CLAUDE_JSON)) {
-    try {
-      destConfig = JSON.parse(readFileSync(CLAUDE_JSON, 'utf-8'));
-      if (!destConfig.mcpServers) {
-        destConfig.mcpServers = {};
-      }
-    } catch {
-      // Invalid JSON, start fresh
-      destConfig = { mcpServers: {} };
-    }
-  }
-
-  // Merge MCP servers (reflex servers are prefixed)
-  for (const [name, config] of Object.entries(srcConfig.mcpServers)) {
-    const prefixedName = `reflex-${name}`;
-    destConfig.mcpServers[prefixedName] = config;
-    log(`Added MCP server: ${prefixedName}`);
-  }
-
-  writeFileSync(CLAUDE_JSON, JSON.stringify(destConfig, null, 2));
-  log(`Updated ${CLAUDE_JSON}`);
-}
-
-function removeMcpServers() {
-  if (!existsSync(CLAUDE_JSON)) return;
-
-  try {
-    const config = JSON.parse(readFileSync(CLAUDE_JSON, 'utf-8'));
-    if (!config.mcpServers) return;
-
-    let removed = 0;
-    for (const name of Object.keys(config.mcpServers)) {
-      if (name.startsWith('reflex-')) {
-        delete config.mcpServers[name];
-        removed++;
-      }
-    }
-
-    if (removed > 0) {
-      writeFileSync(CLAUDE_JSON, JSON.stringify(config, null, 2));
-      log(`Removed ${removed} MCP servers from ${CLAUDE_JSON}`);
-    }
-  } catch {
-    // Ignore errors
-  }
-}
-
-function install() {
-  log('Installing Reflex for Claude Code...');
-
-  // Create directories
-  ensureDir(CLAUDE_DIR);
-  ensureDir(CLAUDE_COMMANDS_DIR);
-
-  // Copy slash commands
-  const commands = [
-    'reflex:gitconfig.md',
-    'reflex:certcollect.md',
-    'reflex:audit.md',
-    'reflex:agents.md',
-    'reflex:mcp.md',
-    'reflex:task.md',
-    'reflex:skills.md',
-  ];
-
-  for (const cmd of commands) {
-    copyCommand(cmd);
-  }
-
-  // Create reflex data directories
-  const REFLEX_DIR = resolve(CLAUDE_DIR, 'reflex');
-  ensureDir(REFLEX_DIR);
-  ensureDir(resolve(REFLEX_DIR, 'logs'));
-
-  // Copy CLAUDE.md reference
-  const srcClaudeMd = resolve(__dirname, 'CLAUDE.md');
-  const destClaudeMd = resolve(REFLEX_DIR, 'CLAUDE.md');
-  if (existsSync(srcClaudeMd)) {
-    copyFileSync(srcClaudeMd, destClaudeMd);
-    log(`Created ${destClaudeMd}`);
-  }
-
-  // Copy skills to ~/.claude/skills/ (Claude Code's skill discovery location)
-  const CLAUDE_SKILLS_DIR = resolve(CLAUDE_DIR, 'skills');
-  const srcSkillsDir = resolve(__dirname, 'config', 'skills');
-
-  if (existsSync(srcSkillsDir)) {
-    ensureDir(CLAUDE_SKILLS_DIR);
-    const skillDirs = readdirSync(srcSkillsDir).filter(f => {
-      const skillPath = join(srcSkillsDir, f);
-      return statSync(skillPath).isDirectory();
-    });
-
-    let skillCount = 0;
-    for (const skillDir of skillDirs) {
-      const srcSkillPath = join(srcSkillsDir, skillDir);
-      const destSkillPath = join(CLAUDE_SKILLS_DIR, skillDir);
-      const copied = copyDirRecursive(srcSkillPath, destSkillPath);
-      if (copied > 0) skillCount++;
-    }
-    log(`Installed ${skillCount} skills to ${CLAUDE_SKILLS_DIR}`);
-  }
-
-  // Copy agents to ~/.claude/agents/ (Claude Code's agent discovery location)
-  const CLAUDE_AGENTS_DIR = resolve(CLAUDE_DIR, 'agents');
-  const srcAgentsDir = resolve(__dirname, '.claude', 'agents');
-
-  if (existsSync(srcAgentsDir)) {
-    ensureDir(CLAUDE_AGENTS_DIR);
-    const agentFiles = readdirSync(srcAgentsDir).filter(f => f.endsWith('.md'));
-
-    for (const agentFile of agentFiles) {
-      const srcPath = join(srcAgentsDir, agentFile);
-      const destPath = join(CLAUDE_AGENTS_DIR, agentFile);
-      copyFileSync(srcPath, destPath);
-    }
-    log(`Installed ${agentFiles.length} agents to ${CLAUDE_AGENTS_DIR}`);
-  }
-
-  // Merge MCP servers into claude config
-  mergeMcpServers();
-
-  log('');
-  log('Installation complete!');
-  log('');
-  log('Available commands in Claude Code:');
-  log('  /reflex:gitconfig  - Display git configuration');
-  log('  /reflex:certcollect - Collect SSL certificates');
-  log('  /reflex:audit      - Control audit logging');
-  log('  /reflex:agents     - List available agents');
-  log('  /reflex:mcp        - List MCP servers');
-  log('  /reflex:task       - Route task to agent');
-  log('');
-  log('Run /mcp in Claude Code to see configured servers.');
-}
-
-function uninstall() {
-  log('Uninstalling Reflex from Claude Code...');
-
-  // Remove slash commands
-  const commands = [
-    'reflex:gitconfig.md',
-    'reflex:certcollect.md',
-    'reflex:audit.md',
-    'reflex:agents.md',
-    'reflex:mcp.md',
-    'reflex:task.md',
-    'reflex:skills.md',
-  ];
-
-  for (const cmd of commands) {
-    const cmdPath = resolve(CLAUDE_COMMANDS_DIR, cmd);
-    if (existsSync(cmdPath)) {
-      unlinkSync(cmdPath);
-      log(`Removed command: ${cmd}`);
-    }
-  }
-
-  // Remove MCP servers
-  removeMcpServers();
-
-  // Remove skills from ~/.claude/skills/
-  const CLAUDE_SKILLS_DIR = resolve(CLAUDE_DIR, 'skills');
-  const srcSkillsDir = resolve(__dirname, 'config', 'skills');
-
-  if (existsSync(srcSkillsDir) && existsSync(CLAUDE_SKILLS_DIR)) {
-    const skillDirs = readdirSync(srcSkillsDir).filter(f => {
-      const skillPath = join(srcSkillsDir, f);
-      return statSync(skillPath).isDirectory();
-    });
-
-    let removedCount = 0;
-    for (const skillDir of skillDirs) {
-      const destSkillPath = join(CLAUDE_SKILLS_DIR, skillDir);
-      if (existsSync(destSkillPath)) {
-        rmSync(destSkillPath, { recursive: true, force: true });
-        removedCount++;
-      }
-    }
-    if (removedCount > 0) {
-      log(`Removed ${removedCount} skills from ${CLAUDE_SKILLS_DIR}`);
-    }
-  }
-
-  // Remove agents from ~/.claude/agents/
-  const CLAUDE_AGENTS_DIR = resolve(CLAUDE_DIR, 'agents');
-  const srcAgentsDir = resolve(__dirname, '.claude', 'agents');
-
-  if (existsSync(srcAgentsDir) && existsSync(CLAUDE_AGENTS_DIR)) {
-    const agentFiles = readdirSync(srcAgentsDir).filter(f => f.endsWith('.md'));
-
-    let removedAgents = 0;
-    for (const agentFile of agentFiles) {
-      const destPath = join(CLAUDE_AGENTS_DIR, agentFile);
-      if (existsSync(destPath)) {
-        unlinkSync(destPath);
-        removedAgents++;
-      }
-    }
-    if (removedAgents > 0) {
-      log(`Removed ${removedAgents} agents from ${CLAUDE_AGENTS_DIR}`);
-    }
-  }
-
-  // Remove reflex directory (logs, etc.)
-  const REFLEX_DIR = resolve(CLAUDE_DIR, 'reflex');
-  if (existsSync(REFLEX_DIR)) {
-    rmSync(REFLEX_DIR, { recursive: true, force: true });
-    log(`Removed reflex directory: ${REFLEX_DIR}`);
-  }
-
-  log('Uninstallation complete!');
-}
-
-// Main
-if (isUninstall) {
-  uninstall();
-} else {
-  install();
-
-  if (!isAuto) {
-    log('');
-    log('To uninstall: npx reflex-claude-plugin --uninstall');
-  }
-}
+console.log('[reflex] This is a Claude Code plugin.');
+console.log('');
+console.log('To install, use one of these methods in Claude Code:');
+console.log('');
+console.log('  1. Test locally:');
+console.log('     claude --plugin-dir ' + process.cwd());
+console.log('');
+console.log('  2. Add marketplace and install:');
+console.log('     /plugin marketplace add mindmorass/reflex');
+console.log('     /plugin install reflex');
+console.log('');
+console.log('See README.md for more details.');

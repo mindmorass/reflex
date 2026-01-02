@@ -8,9 +8,9 @@ REPO="mindmorass/reflex"
 BRANCH="main"
 BASE_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 
-CLAUDE_DIR="$HOME/.claude"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 COMMANDS_DIR="$CLAUDE_DIR/commands"
-CLAUDE_JSON="$HOME/.claude.json"
+CLAUDE_JSON="${CLAUDE_DIR}.json"
 REFLEX_DIR="$HOME/.reflex"
 
 log() {

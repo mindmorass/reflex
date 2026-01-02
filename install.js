@@ -8,9 +8,10 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const CLAUDE_DIR = resolve(homedir(), '.claude');
+const CLAUDE_CONFIG_BASE = process.env.CLAUDE_CONFIG_DIR || resolve(homedir(), '.claude');
+const CLAUDE_DIR = CLAUDE_CONFIG_BASE;
 const CLAUDE_COMMANDS_DIR = resolve(CLAUDE_DIR, 'commands');
-const CLAUDE_JSON = resolve(homedir(), '.claude.json');
+const CLAUDE_JSON = resolve(dirname(CLAUDE_CONFIG_BASE), basename(CLAUDE_CONFIG_BASE) + '.json');
 
 const isAuto = process.argv.includes('--auto');
 const isUninstall = process.argv.includes('--uninstall');

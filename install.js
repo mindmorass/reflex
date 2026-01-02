@@ -135,6 +135,7 @@ function install() {
     'reflex:agents.md',
     'reflex:mcp.md',
     'reflex:task.md',
+    'reflex:skills.md',
   ];
 
   for (const cmd of commands) {
@@ -185,6 +186,7 @@ function uninstall() {
     'reflex:agents.md',
     'reflex:mcp.md',
     'reflex:task.md',
+    'reflex:skills.md',
   ];
 
   for (const cmd of commands) {

@@ -32,6 +32,7 @@ COMMANDS=(
   "reflex:agents.md"
   "reflex:mcp.md"
   "reflex:task.md"
+  "reflex:skills.md"
 )
 
 for cmd in "${COMMANDS[@]}"; do

@@ -61,6 +61,51 @@ if [ -f "$CLAUDE_JSON" ]; then
   fi
 fi
 
+# Remove skills from ~/.claude/skills/
+SKILLS_DIR="$CLAUDE_DIR/skills"
+SKILLS=(
+  "agent-builder"
+  "ci-cd-patterns"
+  "code-review-patterns"
+  "collection-migration"
+  "doc-sync"
+  "docker-patterns"
+  "embedding-comparison"
+  "github-harvester"
+  "graphviz-diagrams"
+  "joplin-publisher"
+  "knowledge-ingestion-patterns"
+  "mcp-server-builder"
+  "mermaid-diagrams"
+  "microsoft-code-reference"
+  "microsoft-docs"
+  "obsidian-publisher"
+  "pdf-harvester"
+  "project-onboarding"
+  "prompt-template"
+  "rag-builder"
+  "router-builder"
+  "security-review"
+  "site-crawler"
+  "task-decomposition"
+  "test-patterns"
+  "troubleshooting"
+  "workflow-builder"
+  "workspace-builder"
+  "youtube-harvester"
+)
+
+removed_count=0
+for skill in "${SKILLS[@]}"; do
+  if [ -d "$SKILLS_DIR/$skill" ]; then
+    rm -rf "$SKILLS_DIR/$skill"
+    ((removed_count++))
+  fi
+done
+if [ $removed_count -gt 0 ]; then
+  log "Removed $removed_count skills from $SKILLS_DIR"
+fi
+
 # Optionally remove reflex directory
 read -p "Remove reflex data directory ($REFLEX_DIR)? (y/N) " -n 1 -r
 echo

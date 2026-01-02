@@ -147,36 +147,33 @@ function install() {
   ensureDir(REFLEX_DIR);
   ensureDir(resolve(REFLEX_DIR, 'logs'));
 
-  // Copy CLAUDE.md and append all skills to it
+  // Copy CLAUDE.md reference
   const srcClaudeMd = resolve(__dirname, 'CLAUDE.md');
   const destClaudeMd = resolve(REFLEX_DIR, 'CLAUDE.md');
+  if (existsSync(srcClaudeMd)) {
+    copyFileSync(srcClaudeMd, destClaudeMd);
+    log(`Created ${destClaudeMd}`);
+  }
+
+  // Copy skills to ~/.claude/skills/ (Claude Code's skill discovery location)
+  const CLAUDE_SKILLS_DIR = resolve(CLAUDE_DIR, 'skills');
   const srcSkillsDir = resolve(__dirname, 'config', 'skills');
 
-  if (existsSync(srcClaudeMd)) {
-    let content = readFileSync(srcClaudeMd, 'utf-8');
+  if (existsSync(srcSkillsDir)) {
+    ensureDir(CLAUDE_SKILLS_DIR);
+    const skillDirs = readdirSync(srcSkillsDir).filter(f => {
+      const skillPath = join(srcSkillsDir, f);
+      return statSync(skillPath).isDirectory();
+    });
 
-    // Append skills section
-    content += '\n---\n\n# Skills Reference\n\n';
-    content += 'The following skills provide patterns and guidance for common tasks.\n\n';
-
-    if (existsSync(srcSkillsDir)) {
-      const skillDirs = readdirSync(srcSkillsDir).filter(f => {
-        const skillPath = join(srcSkillsDir, f);
-        return statSync(skillPath).isDirectory();
-      });
-
-      for (const skillDir of skillDirs) {
-        const skillMdPath = join(srcSkillsDir, skillDir, 'SKILL.md');
-        if (existsSync(skillMdPath)) {
-          const skillContent = readFileSync(skillMdPath, 'utf-8');
-          content += '\n---\n\n' + skillContent + '\n';
-        }
-      }
-      log(`Appended ${skillDirs.length} skills to CLAUDE.md`);
+    let skillCount = 0;
+    for (const skillDir of skillDirs) {
+      const srcSkillPath = join(srcSkillsDir, skillDir);
+      const destSkillPath = join(CLAUDE_SKILLS_DIR, skillDir);
+      const copied = copyDirRecursive(srcSkillPath, destSkillPath);
+      if (copied > 0) skillCount++;
     }
-
-    writeFileSync(destClaudeMd, content);
-    log(`Created ${destClaudeMd}`);
+    log(`Installed ${skillCount} skills to ${CLAUDE_SKILLS_DIR}`);
   }
 
   // Merge MCP servers into claude config
@@ -221,7 +218,30 @@ function uninstall() {
   // Remove MCP servers
   removeMcpServers();
 
-  // Remove reflex directory (skills, logs, etc.)
+  // Remove skills from ~/.claude/skills/
+  const CLAUDE_SKILLS_DIR = resolve(CLAUDE_DIR, 'skills');
+  const srcSkillsDir = resolve(__dirname, 'config', 'skills');
+
+  if (existsSync(srcSkillsDir) && existsSync(CLAUDE_SKILLS_DIR)) {
+    const skillDirs = readdirSync(srcSkillsDir).filter(f => {
+      const skillPath = join(srcSkillsDir, f);
+      return statSync(skillPath).isDirectory();
+    });
+
+    let removedCount = 0;
+    for (const skillDir of skillDirs) {
+      const destSkillPath = join(CLAUDE_SKILLS_DIR, skillDir);
+      if (existsSync(destSkillPath)) {
+        rmSync(destSkillPath, { recursive: true, force: true });
+        removedCount++;
+      }
+    }
+    if (removedCount > 0) {
+      log(`Removed ${removedCount} skills from ${CLAUDE_SKILLS_DIR}`);
+    }
+  }
+
+  // Remove reflex directory (logs, etc.)
   const REFLEX_DIR = resolve(CLAUDE_DIR, 'reflex');
   if (existsSync(REFLEX_DIR)) {
     rmSync(REFLEX_DIR, { recursive: true, force: true });

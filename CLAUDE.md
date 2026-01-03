@@ -41,6 +41,18 @@ reflex/
 | tester | Test generation, coverage analysis |
 | writer | Documentation, technical writing |
 
+## Git Commits
+
+When committing changes, use this format (no Co-Authored-By):
+
+```
+<summary line>
+
+<optional body>
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
 ## Installation
 
 **From marketplace:**

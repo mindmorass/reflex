@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "reflex",
-      "source": "..",
+      "source": "./..",
       "description": "Opinionated sub-agents and skills for application development, infrastructure, and data engineering workflows"
     }
   ]

@@ -1,0 +1,10 @@
+{
+  "name": "mindmorass-reflex",
+  "description": "Reflex plugin marketplace",
+  "plugins": [
+    {
+      "name": "reflex",
+      "path": ".."
+    }
+  ]
+}

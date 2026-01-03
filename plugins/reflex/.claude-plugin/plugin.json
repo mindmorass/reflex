@@ -14,8 +14,8 @@
     "devops",
     "automation"
   ],
-  "agents": "./agents/*.md",
+  "agents": "./agents",
   "skills": "./skills",
-  "commands": "./commands/*.md",
+  "commands": "./commands",
   "mcpServers": "./.mcp.json"
 }

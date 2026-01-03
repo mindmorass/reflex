@@ -1,10 +1,16 @@
 {
   "name": "mindmorass-reflex",
-  "description": "Reflex plugin marketplace",
+  "owner": {
+    "name": "mindmorass"
+  },
+  "metadata": {
+    "description": "Reflex plugin marketplace"
+  },
   "plugins": [
     {
       "name": "reflex",
-      "path": ".."
+      "source": "..",
+      "description": "Opinionated sub-agents and skills for application development, infrastructure, and data engineering workflows"
     }
   ]
 }

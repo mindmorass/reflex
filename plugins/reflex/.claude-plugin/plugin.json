@@ -5,10 +5,7 @@
   "author": {
     "name": "mindmorass"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mindmorass/reflex"
-  },
+  "repository": "https://github.com/mindmorass/reflex",
   "license": "MIT",
   "keywords": [
     "agents",
@@ -17,7 +14,7 @@
     "devops",
     "automation"
   ],
-  "agents": "./agents",
+  "agents": "./agents/*.md",
   "skills": "./skills",
   "commands": "./commands",
   "mcpServers": "./.mcp.json",

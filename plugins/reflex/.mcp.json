@@ -158,6 +158,21 @@
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+    "ffmpeg": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "video-audio-mcp"]
+    },
+    "yt-dlp": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["yt-dlp-mcp"]
+    },
+    "youtube-transcribe": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "youtube-transcribe-mcp"]
     }
   }
 }

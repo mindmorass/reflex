@@ -16,5 +16,6 @@
     "development",
     "devops",
     "automation"
-  ]
+  ],
+  "hooks": "./hooks/hooks.json"
 }

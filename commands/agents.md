@@ -18,11 +18,12 @@ List all available agents in the Reflex orchestration system.
 | Agent | Purpose | Key Skills |
 |-------|---------|------------|
 | analyst | Data analysis, troubleshooting | embedding-comparison, troubleshooting |
-| coder | Code development | microsoft-code-reference, test-patterns |
-| devops | Infrastructure, CI/CD | ci-cd-patterns, docker-patterns |
-| harvester | Data collection | github-harvester, site-crawler |
+| coder | Code development | microsoft-code-reference, docker-patterns |
+| devops | Infrastructure, CI/CD | docker-patterns, workspace-builder |
+| harvester | Data collection, ChromaDB storage | github-harvester, site-crawler, chroma-patterns |
 | planner | Task breakdown | task-decomposition, workflow-builder |
-| researcher | Investigation | microsoft-docs, embedding-comparison |
-| reviewer | Code/security review | code-review-patterns, security-review |
-| tester | Test generation | test-patterns |
-| writer | Documentation | doc-sync, mermaid-diagrams |
+| rag-proxy | RAG wrapper for any agent | chroma-patterns, rag-wrapper |
+| researcher | Investigation, ChromaDB queries | microsoft-docs, chroma-patterns |
+| reviewer | Code/security review | troubleshooting |
+| tester | Test generation | troubleshooting |
+| writer | Documentation | mermaid-diagrams, graphviz-diagrams |

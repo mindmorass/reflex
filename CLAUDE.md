@@ -7,9 +7,9 @@ Reflex is a Claude Code plugin providing opinionated sub-agents and skills for a
 ```
 reflex/
 ├── .claude-plugin/plugin.json   # Plugin manifest
-├── agents/                      # 9 sub-agent definitions
+├── agents/                      # 10 sub-agent definitions
 ├── commands/                    # Slash commands
-├── skills/                      # 29 skill definitions
+├── skills/                      # 26 skill definitions
 ├── .mcp.json                    # MCP server configurations
 └── docs/                        # Additional documentation
 ```
@@ -33,9 +33,10 @@ reflex/
 | analyst | Data analysis, pattern recognition, troubleshooting |
 | coder | Code development, refactoring, implementation |
 | devops | Infrastructure, CI/CD, deployments |
-| harvester | Data collection from web, APIs, documents |
+| harvester | Data collection from web, APIs, documents, ChromaDB storage |
 | planner | Task breakdown, project planning |
-| researcher | Investigation, documentation review |
+| rag-proxy | RAG wrapper for any agent, enriches with ChromaDB context |
+| researcher | Investigation, documentation review, ChromaDB queries |
 | reviewer | Code review, security review |
 | tester | Test generation, coverage analysis |
 | writer | Documentation, technical writing |

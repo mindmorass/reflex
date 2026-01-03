@@ -28,21 +28,23 @@ Display as a table:
 Skills are organized by category:
 
 **Documentation & Diagrams:**
-- doc-sync, graphviz-diagrams, mermaid-diagrams, obsidian-publisher, joplin-publisher
+- graphviz-diagrams, mermaid-diagrams, obsidian-publisher, joplin-publisher
 
 **Data Collection:**
 - github-harvester, pdf-harvester, site-crawler, youtube-harvester
 
 **Code & Development:**
 - agent-builder, mcp-server-builder, router-builder, workflow-builder, workspace-builder
-- code-review-patterns, test-patterns, security-review
 
 **Infrastructure:**
-- ci-cd-patterns, docker-patterns
+- docker-patterns
 
-**Knowledge & AI:**
-- embedding-comparison, knowledge-ingestion-patterns, rag-builder, collection-migration
+**Knowledge & RAG:**
+- chroma-patterns, rag-builder, rag-wrapper, collection-migration
+- embedding-comparison, knowledge-ingestion-patterns
 - microsoft-docs, microsoft-code-reference
 
 **Project Management:**
 - project-onboarding, prompt-template, task-decomposition, troubleshooting
+
+**Note:** Code review, testing, security, and CI/CD patterns are available via official Claude Code plugins (testing-suite, security-pro, developer-essentials).

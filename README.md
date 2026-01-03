@@ -20,31 +20,33 @@ claude --plugin-dir /path/to/reflex
 
 ## Features
 
-### 9 Specialized Agents
+### 10 Specialized Agents
 
 | Agent | Purpose |
 |-------|---------|
 | `analyst` | Data analysis, pattern recognition, troubleshooting |
 | `coder` | Code development, refactoring, implementation |
 | `devops` | Infrastructure, CI/CD, deployments |
-| `harvester` | Data collection from web, APIs, documents |
+| `harvester` | Data collection from web, APIs, documents, ChromaDB storage |
 | `planner` | Task breakdown, project planning |
-| `researcher` | Investigation, documentation review |
+| `rag-proxy` | RAG wrapper for any agent, enriches with ChromaDB context |
+| `researcher` | Investigation, documentation review, ChromaDB queries |
 | `reviewer` | Code review, security review |
 | `tester` | Test generation, coverage analysis |
 | `writer` | Documentation, technical writing |
 
-### 29 Skills
+### 26 Skills
 
 Skills provide reusable knowledge for agents. Run `/reflex:skills` to list all available skills.
 
 Key skills include:
+- `chroma-patterns` - ChromaDB storage and retrieval
+- `rag-wrapper` - Wrap any agent with RAG context
 - `mermaid-diagrams` - Create diagrams for documentation
 - `docker-patterns` - Container best practices
-- `ci-cd-patterns` - Pipeline configurations
-- `test-patterns` - Testing strategies
-- `security-review` - Security analysis
 - `microsoft-docs` - Microsoft documentation lookup
+
+> **Note:** Code review, testing, security, and CI/CD patterns are available via official Claude Code plugins (testing-suite, security-pro, developer-essentials).
 
 ### Commands
 
@@ -75,6 +77,7 @@ Pre-configured in `.mcp.json`:
 | playwright | Browser testing |
 | azure-ai-foundry | Azure AI |
 | m365-agents | Microsoft 365 |
+| chroma | ChromaDB vector storage |
 
 ## Project Structure
 
@@ -82,9 +85,9 @@ Pre-configured in `.mcp.json`:
 reflex/
 ├── .claude-plugin/
 │   └── plugin.json      # Plugin manifest
-├── agents/              # 9 sub-agent definitions
+├── agents/              # 10 sub-agent definitions
 ├── commands/            # Slash commands
-├── skills/              # 29 skill definitions
+├── skills/              # 26 skill definitions
 ├── .mcp.json            # MCP server configurations
 └── docs/                # Additional documentation
 ```

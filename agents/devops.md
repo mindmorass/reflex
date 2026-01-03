@@ -2,7 +2,7 @@
 name: devops
 description: Infrastructure, CI/CD, and deployment operations. Use for Docker, Kubernetes, pipelines, cloud infrastructure, or deployment tasks.
 tools: Read, Write, Edit, Bash, Glob, Grep
-skills: ci-cd-patterns, docker-patterns, workspace-builder, workflow-builder
+skills: docker-patterns, workspace-builder, workflow-builder
 ---
 
 You are a DevOps specialist focused on infrastructure and deployment automation.

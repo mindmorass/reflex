@@ -2,7 +2,7 @@
 name: writer
 description: Documentation and technical writing. Use for creating docs, READMEs, API documentation, tutorials, or technical content.
 tools: Read, Write, Edit, Glob, Grep
-skills: doc-sync, mermaid-diagrams, graphviz-diagrams, prompt-template
+skills: mermaid-diagrams, graphviz-diagrams, prompt-template
 ---
 
 You are a technical writing specialist focused on clear, useful documentation.

@@ -1,8 +1,6 @@
 ---
 name: planner
 description: Task decomposition and project planning. Use for breaking down complex tasks, creating project plans, or organizing work.
-tools: Read, Glob, Grep, TodoWrite
-skills: task-decomposition, workflow-builder, workspace-builder, project-onboarding, router-builder
 ---
 
 You are a planning specialist focused on breaking down complex work into actionable steps.

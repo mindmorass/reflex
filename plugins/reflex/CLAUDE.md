@@ -5,13 +5,15 @@ Reflex is a Claude Code plugin providing opinionated sub-agents and skills for a
 ## Project Structure
 
 ```
-reflex/
+plugins/reflex/
 ├── .claude-plugin/plugin.json   # Plugin manifest
 ├── agents/                      # 10 sub-agent definitions
 ├── commands/                    # Slash commands
 ├── skills/                      # 26 skill definitions
+├── hooks/                       # Session hooks
+├── scripts/                     # Helper scripts
 ├── .mcp.json                    # MCP server configurations
-└── docs/                        # Additional documentation
+└── CLAUDE.md                    # These instructions
 ```
 
 ## Commands

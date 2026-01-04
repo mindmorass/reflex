@@ -555,7 +555,7 @@ def ingest_to_qdrant(
         metadata = {
             "source": "local_file",
             "content_type": file_metadata.get("format", "text"),
-            "file_path": str(file_path.absolute()),
+            "original_path": str(file_path.absolute()),
             "filename": file_path.name,
             "harvested_at": datetime.now().isoformat(),
             "chunk_index": i,

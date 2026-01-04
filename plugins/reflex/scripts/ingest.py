@@ -59,6 +59,18 @@ class QdrantConnectionError(IngestError):
     pass
 
 
+class FileSizeError(IngestError):
+    """Raised when file exceeds size limit."""
+    pass
+
+
+# =============================================================================
+# Constants
+# =============================================================================
+
+MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
+
+
 # =============================================================================
 # Dependency imports with helpful error messages
 # =============================================================================
@@ -668,6 +680,15 @@ def process_file(
     """Process a single file."""
     print(f"\nProcessing: {path.name}")
 
+    # Check file size
+    file_size = path.stat().st_size
+    if file_size > MAX_FILE_SIZE:
+        size_mb = file_size / (1024 * 1024)
+        limit_mb = MAX_FILE_SIZE / (1024 * 1024)
+        raise FileSizeError(
+            f"File size ({size_mb:.1f}MB) exceeds limit ({limit_mb:.0f}MB)"
+        )
+
     # Extract text
     text, metadata = extract(path)
 
@@ -769,6 +790,14 @@ def main():
             # Connection errors are fatal - stop processing
             print(f"\nFatal: {e}")
             sys.exit(1)
+        except FileSizeError as e:
+            # File too large - skip with warning
+            print(f"  Skipped: {e}")
+            results.append({
+                "file": str(path),
+                "status": "skipped",
+                "error": str(e)
+            })
         except (ExtractorError, IngestError) as e:
             # Extraction/ingestion errors - log and continue
             print(f"  Error: {e}")
@@ -791,10 +820,13 @@ def main():
     print("Summary:")
     total_chunks = sum(r.get("chunks", 0) for r in results)
     success = sum(1 for r in results if r["status"] == "success")
+    skipped = sum(1 for r in results if r["status"] == "skipped")
     errors = sum(1 for r in results if r["status"] == "error")
 
     print(f"  Files processed: {len(results)}")
     print(f"  Successful: {success}")
+    if skipped:
+        print(f"  Skipped (too large): {skipped}")
     print(f"  Errors: {errors}")
     print(f"  Total chunks ingested: {total_chunks}")
 

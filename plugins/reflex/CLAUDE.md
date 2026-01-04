@@ -34,6 +34,25 @@ plugins/reflex/
 
 Most agent functionality is provided by official plugins (testing-suite, security-pro, documentation-generator, developer-essentials) and Reflex skills.
 
+## Web Search Storage
+
+**IMPORTANT:** After every WebSearch, store valuable results in Qdrant for future retrieval:
+
+```
+Tool: qdrant-store
+Information: "<summary of search results with key findings>"
+Metadata:
+  source: "web_search"
+  query: "<original search query>"
+  type: "research"
+  harvested_at: "<ISO date>"
+  urls: "<comma-separated source URLs>"
+```
+
+Skip storing for:
+- Trivial lookups (weather, time, simple facts)
+- Results already in Qdrant (check with `qdrant-find` first)
+
 ## Git Commits
 
 When committing changes, use this format (no Co-Authored-By):

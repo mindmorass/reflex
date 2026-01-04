@@ -42,7 +42,7 @@ Reflex works best with these plugins (checked on session start):
 
 Use `/reflex:task "your task" --rag` to enrich tasks with stored knowledge before delegating to official plugin agents.
 
-### 41 Skills
+### 36 Skills
 
 Skills provide reusable knowledge patterns. Run `/reflex:skills` to list all.
 
@@ -96,7 +96,7 @@ plugins/reflex/
 │   └── plugin.json      # Plugin manifest
 ├── agents/              # 1 agent (rag-proxy)
 ├── commands/            # Slash commands
-├── skills/              # 41 skill definitions
+├── skills/              # 36 skill definitions
 ├── hooks/               # Session hooks
 ├── scripts/             # Helper scripts
 ├── .mcp.json            # MCP server configurations

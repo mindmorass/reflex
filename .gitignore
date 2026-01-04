@@ -16,3 +16,4 @@ Thumbs.db
 # Local config
 .mcp.json
 .playwright-mcp/
+__pycache__/

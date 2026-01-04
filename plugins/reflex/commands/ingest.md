@@ -35,6 +35,7 @@ uvx --with pymupdf,fastembed,qdrant-client,python-docx,ebooklib,beautifulsoup4 \
 | EPUB | `.epub` |
 | Word | `.docx` |
 | Jupyter | `.ipynb` |
+| Mermaid | `.mmd`, `.mermaid` |
 | Code | `.py`, `.js`, `.ts`, `.go`, `.rs`, `.java`, `.c`, `.cpp`, `.rb`, `.sh`, `.sql`, `.yaml` |
 
 ## Examples
@@ -54,6 +55,9 @@ uvx --with pymupdf,fastembed,qdrant-client,python-docx,ebooklib,beautifulsoup4 \
 
 # Larger chunks for context
 /reflex:ingest ~/book.epub --chunk-size 600
+
+# Mermaid architecture diagrams
+/reflex:ingest ~/diagrams/ --recursive --collection architecture_patterns
 ```
 
 ## After Ingestion

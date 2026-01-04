@@ -10,6 +10,7 @@ Supported formats:
 - EPUB (.epub)
 - Word (.docx)
 - Jupyter notebooks (.ipynb)
+- Mermaid diagrams (.mmd, .mermaid)
 - Code files (.py, .js, .ts, .go, .rs, .java, .c, .cpp, .rb, .sh)
 
 Usage:
@@ -196,6 +197,151 @@ def extract_notebook(path: Path) -> Tuple[str, Dict]:
     }
 
 
+def extract_mermaid(path: Path) -> Tuple[str, Dict]:
+    """Extract Mermaid diagram with metadata."""
+    text = path.read_text(encoding="utf-8", errors="ignore")
+
+    # Detect diagram type from content
+    diagram_type = detect_mermaid_type(text)
+
+    # Detect architectural patterns
+    patterns = detect_diagram_patterns(text)
+
+    # Extract components (node names)
+    components = extract_mermaid_components(text)
+
+    # Look for description in comments or preceding text
+    description = extract_mermaid_description(text)
+
+    # Build rich document for embedding
+    if description:
+        document = f"{description}\n\n```mermaid\n{text}\n```"
+    else:
+        document = f"Mermaid {diagram_type} diagram\n\nComponents: {', '.join(components[:10])}\n\n```mermaid\n{text}\n```"
+
+    return document, {
+        "format": "mermaid",
+        "diagram_type": diagram_type,
+        "patterns": patterns,
+        "components": components[:20],  # Limit stored components
+    }
+
+
+def detect_mermaid_type(text: str) -> str:
+    """Detect the type of Mermaid diagram."""
+    text_lower = text.strip().lower()
+
+    if text_lower.startswith("graph ") or text_lower.startswith("flowchart "):
+        return "flowchart"
+    elif text_lower.startswith("sequencediagram"):
+        return "sequence"
+    elif text_lower.startswith("classdiagram"):
+        return "class"
+    elif text_lower.startswith("statediagram"):
+        return "state"
+    elif text_lower.startswith("erdiagram"):
+        return "er"
+    elif text_lower.startswith("gantt"):
+        return "gantt"
+    elif text_lower.startswith("pie"):
+        return "pie"
+    elif text_lower.startswith("journey"):
+        return "journey"
+    elif text_lower.startswith("gitgraph"):
+        return "git"
+    elif text_lower.startswith("c4context") or text_lower.startswith("c4container"):
+        return "c4"
+    elif text_lower.startswith("mindmap"):
+        return "mindmap"
+    elif text_lower.startswith("timeline"):
+        return "timeline"
+    elif text_lower.startswith("architecture"):
+        return "architecture"
+    else:
+        return "unknown"
+
+
+def detect_diagram_patterns(text: str) -> List[str]:
+    """Detect architectural patterns in diagram."""
+    patterns = []
+    text_lower = text.lower()
+
+    # Common architectural patterns
+    pattern_keywords = {
+        "microservices": ["service", "api", "gateway", "mesh"],
+        "event-driven": ["event", "queue", "publish", "subscribe", "kafka", "rabbitmq"],
+        "layered": ["presentation", "business", "data", "layer", "controller", "service", "repository"],
+        "client-server": ["client", "server", "request", "response"],
+        "mvc": ["model", "view", "controller"],
+        "cqrs": ["command", "query", "read", "write"],
+        "saga": ["saga", "orchestrat", "compensat"],
+        "circuit-breaker": ["circuit", "breaker", "fallback", "retry"],
+        "api-gateway": ["gateway", "api", "route", "proxy"],
+        "database": ["database", "db", "postgres", "mysql", "mongo", "redis"],
+        "authentication": ["auth", "login", "token", "jwt", "oauth", "sso"],
+        "caching": ["cache", "redis", "memcache"],
+        "load-balancing": ["load", "balancer", "nginx", "haproxy"],
+        "pub-sub": ["pub", "sub", "topic", "subscriber", "publisher"],
+    }
+
+    for pattern, keywords in pattern_keywords.items():
+        if any(kw in text_lower for kw in keywords):
+            patterns.append(pattern)
+
+    return patterns
+
+
+def extract_mermaid_components(text: str) -> List[str]:
+    """Extract component/node names from Mermaid diagram."""
+    components = set()
+
+    # Match node definitions: A[Label], B(Label), C{Label}, D((Label))
+    node_patterns = [
+        r'(\w+)\[([^\]]+)\]',      # A[Label]
+        r'(\w+)\(([^)]+)\)',        # B(Label)
+        r'(\w+)\{([^}]+)\}',        # C{Label}
+        r'(\w+)\[\[([^\]]+)\]\]',   # D[[Label]]
+        r'(\w+)\(\(([^)]+)\)\)',    # E((Label))
+        r'(\w+)>([^]]+)\]',         # F>Label]
+    ]
+
+    for pattern in node_patterns:
+        for match in re.finditer(pattern, text):
+            # Add both the ID and the label
+            components.add(match.group(1))
+            label = match.group(2).strip()
+            if label and len(label) < 50:  # Reasonable label length
+                components.add(label)
+
+    # Match participant declarations in sequence diagrams
+    participant_match = re.findall(r'participant\s+(\w+)', text, re.IGNORECASE)
+    components.update(participant_match)
+
+    # Match actor declarations
+    actor_match = re.findall(r'actor\s+(\w+)', text, re.IGNORECASE)
+    components.update(actor_match)
+
+    return list(components)
+
+
+def extract_mermaid_description(text: str) -> Optional[str]:
+    """Extract description from Mermaid file comments."""
+    lines = text.split('\n')
+    description_lines = []
+
+    for line in lines:
+        # Mermaid comments start with %%
+        if line.strip().startswith('%%'):
+            comment = line.strip()[2:].strip()
+            if comment and not comment.startswith('{'):  # Skip directives
+                description_lines.append(comment)
+        elif line.strip() and not line.strip().startswith('%%'):
+            # Stop at first non-comment line
+            break
+
+    return ' '.join(description_lines) if description_lines else None
+
+
 def extract_code(path: Path) -> Tuple[str, Dict]:
     """Extract text from code file."""
     text = path.read_text(encoding="utf-8", errors="ignore")
@@ -243,6 +389,9 @@ EXTRACTORS = {
     ".epub": extract_epub,
     ".docx": extract_docx,
     ".ipynb": extract_notebook,
+    # Diagrams
+    ".mmd": extract_mermaid,
+    ".mermaid": extract_mermaid,
     # Code files
     ".py": extract_code,
     ".js": extract_code,

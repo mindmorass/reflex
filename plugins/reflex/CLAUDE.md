@@ -36,22 +36,48 @@ Most agent functionality is provided by official plugins (testing-suite, securit
 
 ## Web Search Storage
 
-**IMPORTANT:** After every WebSearch, store valuable results in Qdrant for future retrieval:
+**IMPORTANT:** After every WebSearch, store valuable results in Qdrant with rich metadata:
 
 ```
 Tool: qdrant-store
-Information: "<summary of search results with key findings>"
+Information: "<synthesized summary with key findings>"
 Metadata:
+  # Required
   source: "web_search"
-  query: "<original search query>"
-  type: "research"
-  harvested_at: "<ISO date>"
-  urls: "<comma-separated source URLs>"
+  content_type: "text"           # text, code, image, diagram
+  harvested_at: "<ISO 8601>"
+
+  # Search context
+  query: "<original query>"
+  urls: ["url1", "url2"]
+  domain: "<primary domain>"
+
+  # Classification (for filtering)
+  category: "<technology|business|science|design|security|devops>"
+  subcategory: "<databases|frontend|ml|networking|...>"
+  type: "<documentation|tutorial|troubleshooting|reference|comparison>"
+
+  # Technical (when applicable)
+  language: "<python|typescript|rust|go|...>"
+  framework: "<framework name>"
+
+  # Quality
+  confidence: "<high|medium|low>"
+  freshness: "<current|recent|dated>"
+
+  # Relationships
+  related_topics: ["topic1", "topic2"]
+  project: "<project name or null>"
 ```
 
-Skip storing for:
-- Trivial lookups (weather, time, simple facts)
-- Results already in Qdrant (check with `qdrant-find` first)
+**Image handling:** Create thumbnails (200px), don't download full images:
+```bash
+curl -sL "<image_url>" -o /tmp/img.jpg && sips -Z 200 /tmp/img.jpg --out /tmp/thumb_<hash>.jpg
+```
+
+Store image references with: `content_type: "image"`, `original_url`, `thumbnail_path`, `image_type`
+
+**Skip storing:** Trivial lookups, ephemeral info, duplicates, decorative images
 
 ## Git Commits
 

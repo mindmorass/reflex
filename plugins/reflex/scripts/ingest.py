@@ -29,24 +29,54 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-# Qdrant client
+
+# =============================================================================
+# Custom Exceptions
+# =============================================================================
+
+class IngestError(Exception):
+    """Base exception for ingestion errors."""
+    pass
+
+
+class DependencyError(IngestError):
+    """Raised when a required dependency is missing."""
+    pass
+
+
+class ExtractorError(IngestError):
+    """Raised when text extraction fails."""
+    pass
+
+
+class QdrantConnectionError(IngestError):
+    """Raised when Qdrant connection fails."""
+    pass
+
+
+# =============================================================================
+# Dependency imports with helpful error messages
+# =============================================================================
+
 try:
     from qdrant_client import QdrantClient
     from qdrant_client.models import PointStruct, VectorParams, Distance
 except ImportError:
-    print("Install: pip install qdrant-client")
-    sys.exit(1)
+    raise DependencyError(
+        "qdrant-client not installed. Run: pip install qdrant-client"
+    )
 
-# Embedding model
 try:
     from fastembed import TextEmbedding
 except ImportError:
-    print("Install: pip install fastembed")
-    sys.exit(1)
+    raise DependencyError(
+        "fastembed not installed. Run: pip install fastembed"
+    )
 
 
 # =============================================================================
@@ -58,8 +88,7 @@ def extract_pdf(path: Path) -> Tuple[str, Dict]:
     try:
         import fitz
     except ImportError:
-        print("Install: pip install pymupdf")
-        sys.exit(1)
+        raise ExtractorError("pymupdf not installed. Run: pip install pymupdf")
 
     doc = fitz.open(str(path))
     pages = []
@@ -89,8 +118,7 @@ def extract_html(path: Path) -> Tuple[str, Dict]:
     try:
         from bs4 import BeautifulSoup
     except ImportError:
-        print("Install: pip install beautifulsoup4")
-        sys.exit(1)
+        raise ExtractorError("beautifulsoup4 not installed. Run: pip install beautifulsoup4")
 
     html = path.read_text(encoding="utf-8", errors="ignore")
     soup = BeautifulSoup(html, "html.parser")
@@ -116,8 +144,7 @@ def extract_epub(path: Path) -> Tuple[str, Dict]:
         from ebooklib import epub
         from bs4 import BeautifulSoup
     except ImportError:
-        print("Install: pip install ebooklib beautifulsoup4")
-        sys.exit(1)
+        raise ExtractorError("ebooklib not installed. Run: pip install ebooklib beautifulsoup4")
 
     book = epub.read_epub(str(path))
 
@@ -150,8 +177,7 @@ def extract_docx(path: Path) -> Tuple[str, Dict]:
     try:
         from docx import Document
     except ImportError:
-        print("Install: pip install python-docx")
-        sys.exit(1)
+        raise ExtractorError("python-docx not installed. Run: pip install python-docx")
 
     doc = Document(str(path))
 
@@ -499,6 +525,48 @@ def chunk_text(
 # Qdrant ingestion
 # =============================================================================
 
+def connect_to_qdrant(
+    qdrant_url: str,
+    max_retries: int = 3,
+    retry_delay: float = 2.0
+) -> QdrantClient:
+    """
+    Connect to Qdrant with retry logic.
+
+    Args:
+        qdrant_url: Qdrant server URL
+        max_retries: Maximum number of connection attempts
+        retry_delay: Seconds to wait between retries
+
+    Returns:
+        Connected QdrantClient
+
+    Raises:
+        QdrantConnectionError: If all connection attempts fail
+    """
+    last_error = None
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            client = QdrantClient(url=qdrant_url, timeout=10)
+            # Test connection by listing collections
+            client.get_collections()
+            return client
+        except Exception as e:
+            last_error = e
+            if attempt < max_retries:
+                print(f"  Connection attempt {attempt}/{max_retries} failed: {e}")
+                print(f"  Retrying in {retry_delay}s...")
+                time.sleep(retry_delay)
+            else:
+                raise QdrantConnectionError(
+                    f"Failed to connect to Qdrant at {qdrant_url} after {max_retries} attempts: {last_error}"
+                )
+
+    # Should not reach here, but just in case
+    raise QdrantConnectionError(f"Failed to connect to Qdrant: {last_error}")
+
+
 def ingest_to_qdrant(
     chunks: List[Dict],
     file_path: Path,
@@ -518,9 +586,12 @@ def ingest_to_qdrant(
 
     Returns:
         Number of chunks ingested
+
+    Raises:
+        QdrantConnectionError: If connection to Qdrant fails
     """
-    # Initialize clients
-    client = QdrantClient(url=qdrant_url)
+    # Initialize clients with retry
+    client = connect_to_qdrant(qdrant_url)
     embedder = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
 
     # Vector name used by mcp-server-qdrant
@@ -694,12 +765,25 @@ def main():
                 qdrant_url=args.qdrant_url
             )
             results.append(result)
-        except Exception as e:
+        except QdrantConnectionError as e:
+            # Connection errors are fatal - stop processing
+            print(f"\nFatal: {e}")
+            sys.exit(1)
+        except (ExtractorError, IngestError) as e:
+            # Extraction/ingestion errors - log and continue
             print(f"  Error: {e}")
             results.append({
                 "file": str(path),
                 "status": "error",
                 "error": str(e)
+            })
+        except Exception as e:
+            # Unexpected errors - log with details and continue
+            print(f"  Unexpected error: {type(e).__name__}: {e}")
+            results.append({
+                "file": str(path),
+                "status": "error",
+                "error": f"{type(e).__name__}: {e}"
             })
 
     # Summary

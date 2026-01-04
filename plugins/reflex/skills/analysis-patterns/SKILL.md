@@ -30,7 +30,7 @@ Patterns for data analysis, metrics evaluation, and systematic troubleshooting.
 
 ## Visualization Tools
 
-Use `mermaid-diagrams` or `graphviz-diagrams` skills for:
+Use `graphviz-diagrams` skill or `documentation-generator:mermaid-expert` for:
 - Flowcharts showing data flow
 - Sequence diagrams for event timelines
 - State diagrams for system states

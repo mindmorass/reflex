@@ -285,7 +285,7 @@ flowchart TB
 
 ## Integration with Mermaid
 
-Obsidian renders mermaid diagrams natively. Use the `mermaid-diagrams` skill for diagram syntax, then embed directly:
+Obsidian renders mermaid diagrams natively. Use `documentation-generator:mermaid-expert` for diagram syntax, then embed directly:
 
 ```markdown
 ```mermaid

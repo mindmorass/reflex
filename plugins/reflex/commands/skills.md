@@ -23,28 +23,31 @@ Display as a table:
 |-------|-------------|
 | skill-name | Brief description from SKILL.md |
 
-## Available Skills
+## Available Skills (36)
 
-Skills are organized by category:
-
-**Documentation & Diagrams:**
-- graphviz-diagrams, mermaid-diagrams, obsidian-publisher, joplin-publisher
+**Knowledge & RAG:**
+- qdrant-patterns, rag-builder, rag-wrapper, research-patterns
+- knowledge-ingestion-patterns, collection-migration, embedding-comparison
 
 **Data Collection:**
 - github-harvester, pdf-harvester, site-crawler, youtube-harvester
 
-**Code & Development:**
-- agent-builder, mcp-server-builder, router-builder, workflow-builder, workspace-builder
+**Media & Video:**
+- ffmpeg-patterns, streaming-patterns, video-upload-patterns
+- ai-video-generation, podcast-production
 
 **Infrastructure:**
-- docker-patterns
+- docker-patterns, kubernetes-patterns, terraform-patterns
+- aws-patterns, observability-patterns, database-migration-patterns
 
-**Knowledge & RAG:**
-- qdrant-patterns, rag-builder, rag-wrapper, collection-migration
-- embedding-comparison, knowledge-ingestion-patterns
-- microsoft-docs, microsoft-code-reference
+**Claude Code Building:**
+- agent-builder, mcp-server-builder, router-builder, workflow-builder, prompt-template
 
-**Project Management:**
-- project-onboarding, prompt-template, task-decomposition, troubleshooting
+**Documentation & Publishing:**
+- graphviz-diagrams, obsidian-publisher, joplin-publisher
 
-**Note:** Code review, testing, security, and CI/CD patterns are available via official Claude Code plugins (testing-suite, security-pro, developer-essentials).
+**Project & Analysis:**
+- project-onboarding, task-decomposition, workspace-builder
+- analysis-patterns, microsoft-docs, microsoft-code-reference
+
+**Note:** Code review, testing, security, mermaid diagrams, and debugging are provided by official plugins (testing-suite, security-pro, documentation-generator, developer-essentials).

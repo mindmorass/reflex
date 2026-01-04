@@ -17,14 +17,13 @@ Route a task to the appropriate Reflex agent for execution.
 ## Options
 
 - `-a, --agent <name>` - Specify preferred agent (analyst, coder, devops, harvester, planner, researcher, reviewer, tester, writer)
-- `-r, --rag` - Enable RAG wrapping: query ChromaDB for context before routing
-- `-p, --project <name>` - Project name for RAG collection prefix (default: "reflex")
+- `-r, --rag` - Enable RAG wrapping: query Qdrant for context before routing
 
 ## RAG Wrapping
 
 When `--rag` is enabled:
 1. Routes through `rag-proxy` agent first
-2. Queries ChromaDB for relevant stored knowledge
+2. Queries Qdrant for relevant stored knowledge
 3. Enriches the task with retrieved context
 4. Delegates to the target agent with full context
 

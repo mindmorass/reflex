@@ -36,10 +36,10 @@ plugins/reflex/
 | coder | Code development, refactoring, implementation |
 | content-publisher | Video uploads to YouTube/TikTok/Vimeo, metadata, scheduling |
 | devops | Infrastructure, CI/CD, deployments |
-| harvester | Data collection from web, APIs, documents, ChromaDB storage |
+| harvester | Data collection from web, APIs, documents, Qdrant storage |
 | planner | Task breakdown, project planning |
-| rag-proxy | RAG wrapper for any agent, enriches with ChromaDB context |
-| researcher | Investigation, documentation review, ChromaDB queries |
+| rag-proxy | RAG wrapper for any agent, enriches with Qdrant context |
+| researcher | Investigation, documentation review, Qdrant queries |
 | reviewer | Code review, security review |
 | streamer | Live streaming setup, RTMP, OBS automation, multi-platform |
 | tester | Test generation, coverage analysis |

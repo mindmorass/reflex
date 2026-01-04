@@ -27,10 +27,10 @@ claude --plugin-dir /path/to/reflex
 | `analyst` | Data analysis, pattern recognition, troubleshooting |
 | `coder` | Code development, refactoring, implementation |
 | `devops` | Infrastructure, CI/CD, deployments |
-| `harvester` | Data collection from web, APIs, documents, ChromaDB storage |
+| `harvester` | Data collection from web, APIs, documents, Qdrant storage |
 | `planner` | Task breakdown, project planning |
-| `rag-proxy` | RAG wrapper for any agent, enriches with ChromaDB context |
-| `researcher` | Investigation, documentation review, ChromaDB queries |
+| `rag-proxy` | RAG wrapper for any agent, enriches with Qdrant context |
+| `researcher` | Investigation, documentation review, Qdrant queries |
 | `reviewer` | Code review, security review |
 | `tester` | Test generation, coverage analysis |
 | `writer` | Documentation, technical writing |
@@ -40,7 +40,7 @@ claude --plugin-dir /path/to/reflex
 Skills provide reusable knowledge for agents. Run `/reflex:skills` to list all available skills.
 
 Key skills include:
-- `chroma-patterns` - ChromaDB storage and retrieval
+- `qdrant-patterns` - Qdrant vector storage and retrieval
 - `rag-wrapper` - Wrap any agent with RAG context
 - `mermaid-diagrams` - Create diagrams for documentation
 - `docker-patterns` - Container best practices
@@ -77,7 +77,7 @@ Pre-configured in `.mcp.json`:
 | playwright | Browser testing |
 | azure-ai-foundry | Azure AI |
 | m365-agents | Microsoft 365 |
-| chroma | ChromaDB vector storage |
+| qdrant | Qdrant vector storage |
 
 ## Project Structure
 

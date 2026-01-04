@@ -40,7 +40,7 @@ Skills are organized by category:
 - docker-patterns
 
 **Knowledge & RAG:**
-- chroma-patterns, rag-builder, rag-wrapper, collection-migration
+- qdrant-patterns, rag-builder, rag-wrapper, collection-migration
 - embedding-comparison, knowledge-ingestion-patterns
 - microsoft-docs, microsoft-code-reference
 

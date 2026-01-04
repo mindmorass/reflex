@@ -20,10 +20,10 @@ List all available agents in the Reflex orchestration system.
 | analyst | Data analysis, troubleshooting | embedding-comparison, troubleshooting |
 | coder | Code development | microsoft-code-reference, docker-patterns |
 | devops | Infrastructure, CI/CD | docker-patterns, workspace-builder |
-| harvester | Data collection, ChromaDB storage | github-harvester, site-crawler, chroma-patterns |
+| harvester | Data collection, Qdrant storage | github-harvester, site-crawler, qdrant-patterns |
 | planner | Task breakdown | task-decomposition, workflow-builder |
-| rag-proxy | RAG wrapper for any agent | chroma-patterns, rag-wrapper |
-| researcher | Investigation, ChromaDB queries | microsoft-docs, chroma-patterns |
+| rag-proxy | RAG wrapper for any agent | qdrant-patterns, rag-wrapper |
+| researcher | Investigation, Qdrant queries | microsoft-docs, qdrant-patterns |
 | reviewer | Code/security review | troubleshooting |
 | tester | Test generation | troubleshooting |
 | writer | Documentation | mermaid-diagrams, graphviz-diagrams |

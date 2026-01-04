@@ -63,16 +63,14 @@
       "command": "npx",
       "args": ["-y", "@microsoft/m365agentstoolkit-mcp@latest", "server", "start"]
     },
-    "chroma": {
+    "qdrant": {
       "type": "stdio",
       "command": "uvx",
-      "args": [
-        "--python", "3.12",
-        "chroma-mcp",
-        "--client-type", "http",
-        "--host", "localhost",
-        "--port", "8000"
-      ]
+      "args": ["--python", "3.12", "--with", "fastembed", "mcp-server-qdrant"],
+      "env": {
+        "QDRANT_URL": "http://localhost:6333",
+        "COLLECTION_NAME": "${WORKSPACE_PROFILE:-default}_memories"
+      }
     },
     "aws": {
       "type": "http",

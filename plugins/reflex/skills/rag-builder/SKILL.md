@@ -6,7 +6,7 @@ description: Build Retrieval-Augmented Generation systems with vector databases
 
 # RAG Builder Skill
 
-> Build the RAG (Retrieval-Augmented Generation) server using ChromaDB.
+> Build the RAG (Retrieval-Augmented Generation) server using Qdrant.
 
 ## Overview
 
@@ -18,10 +18,31 @@ The RAG server provides vector search capabilities for the workspace:
 ## Prerequisites
 
 ```bash
-pip install chromadb sentence-transformers mcp
+pip install qdrant-client sentence-transformers mcp fastembed
 ```
 
-## Build Steps
+## Using the MCP Server
+
+The Reflex plugin includes a pre-configured Qdrant MCP server. Use these tools:
+
+### Store Documents
+
+```
+Tool: qdrant-store
+Information: "Your document text here..."
+Metadata:
+  source: "user_upload"
+  type: "notes"
+```
+
+### Search Documents
+
+```
+Tool: qdrant-find
+Query: "quantum computing applications"
+```
+
+## Build Steps (Custom Server)
 
 ### Step 1: Create the RAG Server
 
@@ -30,26 +51,25 @@ pip install chromadb sentence-transformers mcp
 ```python
 #!/usr/bin/env python3
 """
-RAG MCP Server - Vector search for multi-project RAG.
+RAG MCP Server - Vector search using Qdrant.
 """
 
 import asyncio
 import json
 import os
-from pathlib import Path
 from datetime import datetime
 from typing import Optional
 
-import chromadb
-from chromadb.config import Settings
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from sentence_transformers import SentenceTransformer
 
 # Configuration
-DB_PATH = os.getenv("RAG_DB_PATH", "./rag/database/chroma")
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
-DEFAULT_COLLECTION = os.getenv("DEFAULT_COLLECTION", "default")
+DEFAULT_COLLECTION = os.getenv("COLLECTION_NAME", "default_memories")
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "512"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
 
@@ -57,26 +77,28 @@ CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
 class RAGServer:
     def __init__(self):
         self.server = Server("rag-server")
-        
-        # Initialize ChromaDB
-        Path(DB_PATH).mkdir(parents=True, exist_ok=True)
-        self.client = chromadb.PersistentClient(
-            path=DB_PATH,
-            settings=Settings(anonymized_telemetry=False)
-        )
-        
+
+        # Initialize Qdrant
+        self.client = QdrantClient(url=QDRANT_URL)
+
         # Initialize embedding model
         self.embedder = SentenceTransformer(EMBEDDING_MODEL)
-        
+        self.vector_size = self.embedder.get_sentence_embedding_dimension()
+
         self._setup_tools()
-    
-    def _get_collection(self, name: str):
-        """Get or create a collection."""
-        return self.client.get_or_create_collection(
-            name=name,
-            metadata={"hnsw:space": "cosine"}
-        )
-    
+
+    def _ensure_collection(self, name: str):
+        """Ensure collection exists."""
+        collections = self.client.get_collections().collections
+        if not any(c.name == name for c in collections):
+            self.client.create_collection(
+                collection_name=name,
+                vectors_config=VectorParams(
+                    size=self.vector_size,
+                    distance=Distance.COSINE
+                )
+            )
+
     def _chunk_text(self, text: str) -> list[str]:
         """Split text into overlapping chunks."""
         words = text.split()
@@ -86,9 +108,9 @@ class RAGServer:
             if chunk:
                 chunks.append(chunk)
         return chunks
-    
+
     def _setup_tools(self):
-        
+
         @self.server.tool()
         async def ingest(
             content: str,
@@ -98,109 +120,96 @@ class RAGServer:
         ) -> str:
             """
             Ingest a document into the vector database.
-            
+
             Args:
                 content: Document text to ingest
                 collection: Collection name (use project name for isolation)
                 metadata: Optional metadata (source, type, date, etc.)
                 doc_id: Optional custom document ID
             """
-            coll = self._get_collection(collection)
+            self._ensure_collection(collection)
             chunks = self._chunk_text(content)
-            
+
             base_id = doc_id or f"doc_{datetime.now().timestamp()}"
-            ids = [f"{base_id}_chunk_{i}" for i in range(len(chunks))]
-            
+
             # Generate embeddings
             embeddings = self.embedder.encode(chunks).tolist()
-            
+
             # Prepare metadata
             base_meta = metadata or {}
             base_meta["ingested_at"] = datetime.now().isoformat()
             base_meta["source_doc"] = base_id
-            metadatas = [{**base_meta, "chunk_index": i} for i in range(len(chunks))]
-            
-            coll.add(
-                ids=ids,
-                embeddings=embeddings,
-                documents=chunks,
-                metadatas=metadatas
-            )
-            
+
+            # Create points
+            points = [
+                PointStruct(
+                    id=hash(f"{base_id}_chunk_{i}") % (2**63),
+                    vector=embeddings[i],
+                    payload={**base_meta, "chunk_index": i, "content": chunk}
+                )
+                for i, chunk in enumerate(chunks)
+            ]
+
+            self.client.upsert(collection_name=collection, points=points)
+
             return json.dumps({
                 "status": "success",
                 "collection": collection,
                 "chunks": len(chunks),
                 "doc_id": base_id
             })
-        
+
         @self.server.tool()
         async def search(
             query: str,
             collection: str = DEFAULT_COLLECTION,
-            n_results: int = 5,
-            where: Optional[dict] = None
+            n_results: int = 5
         ) -> str:
             """
             Search for relevant documents.
-            
+
             Args:
                 query: Search query
                 collection: Collection to search
                 n_results: Number of results (default 5)
-                where: Optional metadata filter
             """
-            coll = self._get_collection(collection)
-            
-            query_embedding = self.embedder.encode([query]).tolist()
-            
-            results = coll.query(
-                query_embeddings=query_embedding,
-                n_results=n_results,
-                where=where
+            self._ensure_collection(collection)
+
+            query_embedding = self.embedder.encode([query])[0].tolist()
+
+            results = self.client.search(
+                collection_name=collection,
+                query_vector=query_embedding,
+                limit=n_results
             )
-            
-            formatted = []
-            for i in range(len(results["ids"][0])):
-                formatted.append({
-                    "id": results["ids"][0][i],
-                    "content": results["documents"][0][i],
-                    "metadata": results["metadatas"][0][i] if results["metadatas"] else {},
-                    "distance": results["distances"][0][i] if results["distances"] else None
-                })
-            
+
+            formatted = [
+                {
+                    "id": str(r.id),
+                    "content": r.payload.get("content", ""),
+                    "metadata": {k: v for k, v in r.payload.items() if k != "content"},
+                    "score": r.score
+                }
+                for r in results
+            ]
+
             return json.dumps({
                 "query": query,
                 "collection": collection,
                 "results": formatted
             })
-        
+
         @self.server.tool()
         async def list_collections() -> str:
             """List all collections."""
-            collections = self.client.list_collections()
+            collections = self.client.get_collections()
             return json.dumps({
                 "collections": [
-                    {"name": c.name, "count": c.count()}
-                    for c in collections
+                    {"name": c.name}
+                    for c in collections.collections
                 ]
             })
-        
-        @self.server.tool()
-        async def delete_collection(collection: str) -> str:
-            """Delete a collection."""
-            self.client.delete_collection(collection)
-            return json.dumps({"status": "deleted", "collection": collection})
-        
-        @self.server.tool()
-        async def collection_stats(collection: str) -> str:
-            """Get collection statistics."""
-            coll = self._get_collection(collection)
-            return json.dumps({
-                "collection": collection,
-                "count": coll.count()
-            })
-    
+
     async def run(self):
         async with stdio_server() as (read_stream, write_stream):
             await self.server.run(read_stream, write_stream)
@@ -221,7 +230,7 @@ if __name__ == "__main__":
 
 ```
 mcp>=1.0.0
-chromadb>=0.4.0
+qdrant-client>=1.7.0
 sentence-transformers>=2.2.0
 ```
 
@@ -239,19 +248,12 @@ import sys
 # Set up path
 sys.path.insert(0, os.path.dirname(__file__))
 
-def test_chromadb():
-    """Test ChromaDB is working."""
-    import chromadb
-    client = chromadb.Client()
-    collection = client.create_collection("test")
-    collection.add(
-        ids=["1"],
-        documents=["test document"],
-        metadatas=[{"source": "test"}]
-    )
-    results = collection.query(query_texts=["test"], n_results=1)
-    assert len(results["ids"][0]) == 1
-    print("✅ ChromaDB working")
+def test_qdrant():
+    """Test Qdrant is working."""
+    from qdrant_client import QdrantClient
+    client = QdrantClient(url="http://localhost:6333")
+    collections = client.get_collections()
+    print(f"✅ Qdrant working, {len(collections.collections)} collections")
 
 def test_embeddings():
     """Test embedding model."""
@@ -270,16 +272,18 @@ def test_server_init():
     print("✅ Server initialization working")
 
 if __name__ == "__main__":
-    test_chromadb()
+    test_qdrant()
     test_embeddings()
     test_server_init()
-    print("
-✅ All RAG tests passed!")
+    print("\n✅ All RAG tests passed!")
 ```
 
 ## Verification
 
 ```bash
+# Start Qdrant (if using Docker)
+docker run -d -p 6333:6333 qdrant/qdrant
+
 # Navigate to server directory
 cd mcp/servers/rag-server
 
@@ -290,7 +294,7 @@ pip install -r requirements.txt
 python test_rag.py
 
 # Expected output:
-# ✅ ChromaDB working
+# ✅ Qdrant working, 0 collections
 # ✅ Embeddings working
 # ✅ Server initialization working
 # ✅ All RAG tests passed!
@@ -333,9 +337,9 @@ collections = await list_collections()
 
 Environment variables:
 ```bash
-RAG_DB_PATH=./rag/database/chroma
+QDRANT_URL=http://localhost:6333
 EMBEDDING_MODEL=all-MiniLM-L6-v2
-DEFAULT_COLLECTION=default
+COLLECTION_NAME=default_memories
 CHUNK_SIZE=512
 CHUNK_OVERLAP=50
 ```

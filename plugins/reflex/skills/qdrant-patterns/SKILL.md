@@ -116,16 +116,6 @@ When answering questions or implementing features:
 4. **Store with metadata**: Add via `qdrant-store`
 5. **Use for response**: Include relevant chunks
 
-## Comparison with ChromaDB
-
-| Feature | Qdrant MCP | ChromaDB MCP |
-|---------|------------|--------------|
-| Store | `qdrant-store` | `chroma_add_documents` |
-| Search | `qdrant-find` | `chroma_query_documents` |
-| Collections | Environment-based | Explicit per-call |
-| Embedding | fastembed (automatic) | Configurable |
-| Filtering | Via query semantics | Explicit metadata filters |
-
 ## Tips
 
 - Keep stored information focused (one topic per entry)

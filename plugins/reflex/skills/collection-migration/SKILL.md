@@ -22,7 +22,7 @@ This skill provides safe procedures for each operation.
 ## Prerequisites
 
 ```bash
-pip install chromadb
+pip install qdrant-client
 ```
 
 ## Safety Principles
@@ -31,6 +31,86 @@ pip install chromadb
 2. **Verify after migration** - Run validation checks
 3. **Preserve metadata** - Don't lose document provenance
 4. **Atomic operations** - Complete fully or rollback
+
+
+## Operation 1: Export Collection
+
+**Use case**: Backup or transfer to another environment
+
+```python
+#!/usr/bin/env python3
+"""Export a collection to JSON."""
+
+import json
+from datetime import datetime
+from qdrant_client import QdrantClient
+
+def export_collection(
+    collection_name: str,
+    output_path: str = None,
+    qdrant_url: str = "http://localhost:6333"
+) -> str:
+    """
+    Export collection to JSON file.
+
+    Args:
+        collection_name: Name of collection to export
+        output_path: Output file path (default: {collection}_{timestamp}.json)
+        qdrant_url: Qdrant server URL
+
+    Returns:
+        Path to exported file
+    """
+    client = QdrantClient(url=qdrant_url)
+
+    # Get all points
+    results = client.scroll(
+        collection_name=collection_name,
+        limit=100000,
+        with_payload=True,
+        with_vectors=True
+    )
+
+    points = results[0]
+
+    # Build export data
+    export_data = {
+        "collection_name": collection_name,
+        "exported_at": datetime.now().isoformat(),
+        "document_count": len(points),
+        "documents": [
+            {
+                "id": str(p.id),
+                "content": p.payload.get("content", ""),
+                "metadata": {k: v for k, v in p.payload.items() if k != "content"},
+                "vector": p.vector
+            }
+            for p in points
+        ]
+    }
+
+    # Write to file
+    if output_path is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = f"{collection_name}_{timestamp}.json"
+
+    with open(output_path, "w") as f:
+        json.dump(export_data, f, indent=2)
+
+    print(f"✅ Exported {len(points)} documents to {output_path}")
+    return output_path
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Usage: python export_collection.py <collection_name> [output_path]")
+        sys.exit(1)
+
+    collection = sys.argv[1]
+    output = sys.argv[2] if len(sys.argv) > 2 else None
+    export_collection(collection, output)
+```
 
 
 ## Operation 2: Import Collection
@@ -42,14 +122,14 @@ pip install chromadb
 """Import a collection from JSON export."""
 
 import json
-import chromadb
-from chromadb.config import Settings
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct
 
 def import_collection(
     input_path: str,
     new_name: str = None,
-    db_path: str = "./rag/database/chroma",
-    skip_embeddings: bool = False
+    qdrant_url: str = "http://localhost:6333",
+    skip_vectors: bool = False
 ) -> str:
     """
     Import collection from JSON file.
@@ -57,8 +137,8 @@ def import_collection(
     Args:
         input_path: Path to exported JSON file
         new_name: New collection name (default: use original name)
-        db_path: Path to ChromaDB database
-        skip_embeddings: If True, regenerate embeddings instead of using exported ones
+        qdrant_url: Qdrant server URL
+        skip_vectors: If True, regenerate embeddings instead of using exported ones
 
     Returns:
         Name of imported collection
@@ -67,58 +147,49 @@ def import_collection(
         data = json.load(f)
 
     collection_name = new_name or data["collection_name"]
-
-    client = chromadb.PersistentClient(
-        path=db_path,
-        settings=Settings(anonymized_telemetry=False)
-    )
+    client = QdrantClient(url=qdrant_url)
 
     # Check if collection exists
-    existing = [c.name for c in client.list_collections()]
+    existing = [c.name for c in client.get_collections().collections]
     if collection_name in existing:
         raise ValueError(f"Collection '{collection_name}' already exists. Use different name or delete first.")
 
-    collection = client.create_collection(
-        name=collection_name,
-        metadata={"hnsw:space": "cosine"}
+    # Determine vector size from first document
+    if data["documents"] and data["documents"][0].get("vector"):
+        vector_size = len(data["documents"][0]["vector"])
+    else:
+        vector_size = 384  # Default for all-MiniLM-L6-v2
+
+    # Create collection
+    client.create_collection(
+        collection_name=collection_name,
+        vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
     )
 
-    # Prepare data for batch insert
-    ids = []
-    documents = []
-    metadatas = []
-    embeddings = [] if not skip_embeddings else None
-
+    # Prepare points
+    points = []
     for doc in data["documents"]:
-        ids.append(doc["id"])
-        documents.append(doc["content"])
+        if skip_vectors or not doc.get("vector"):
+            continue  # Would need to regenerate embeddings
 
-        # Update metadata to track import
-        meta = doc["metadata"] or {}
-        meta["imported_from"] = data["collection_name"]
-        meta["imported_at"] = data["exported_at"]
-        metadatas.append(meta)
+        payload = doc["metadata"] or {}
+        payload["content"] = doc["content"]
+        payload["imported_from"] = data["collection_name"]
+        payload["imported_at"] = data["exported_at"]
 
-        if not skip_embeddings and doc.get("embedding"):
-            embeddings.append(doc["embedding"])
+        points.append(PointStruct(
+            id=hash(doc["id"]) % (2**63),
+            vector=doc["vector"],
+            payload=payload
+        ))
 
     # Batch insert
     batch_size = 100
-    for i in range(0, len(ids), batch_size):
-        batch_end = min(i + batch_size, len(ids))
+    for i in range(0, len(points), batch_size):
+        batch = points[i:i + batch_size]
+        client.upsert(collection_name=collection_name, points=batch)
 
-        add_kwargs = {
-            "ids": ids[i:batch_end],
-            "documents": documents[i:batch_end],
-            "metadatas": metadatas[i:batch_end]
-        }
-
-        if embeddings:
-            add_kwargs["embeddings"] = embeddings[i:batch_end]
-
-        collection.add(**add_kwargs)
-
-    print(f"✅ Imported {len(ids)} documents into '{collection_name}'")
+    print(f"✅ Imported {len(points)} documents into '{collection_name}'")
     return collection_name
 
 
@@ -134,6 +205,33 @@ if __name__ == "__main__":
 ```
 
 
+## Operation 3: Rename Collection
+
+**Use case**: Project renamed, need to update collection name
+
+```python
+def rename_collection(
+    old_name: str,
+    new_name: str,
+    qdrant_url: str = "http://localhost:6333"
+):
+    """
+    Rename a collection (export + import + delete).
+    """
+    # Export first (backup)
+    export_path = export_collection(old_name, qdrant_url=qdrant_url)
+
+    # Import with new name
+    import_collection(export_path, new_name=new_name, qdrant_url=qdrant_url)
+
+    # Delete old collection
+    client = QdrantClient(url=qdrant_url)
+    client.delete_collection(old_name)
+
+    print(f"✅ Renamed '{old_name}' to '{new_name}'")
+```
+
+
 ## Operation 4: Merge Collections
 
 **Use case**: Consolidating multiple projects, combining research
@@ -142,7 +240,7 @@ if __name__ == "__main__":
 def merge_collections(
     source_collections: list,
     target_collection: str,
-    db_path: str = "./rag/database/chroma",
+    qdrant_url: str = "http://localhost:6333",
     deduplicate: bool = True
 ):
     """
@@ -153,13 +251,20 @@ def merge_collections(
         target_collection: Name for merged collection
         deduplicate: If True, skip duplicate content
     """
-    client = chromadb.PersistentClient(path=db_path)
+    client = QdrantClient(url=qdrant_url)
+
+    # Determine vector size from first source
+    first_coll = client.get_collection(source_collections[0])
+    vector_size = first_coll.config.params.vectors.size
 
     # Create or get target collection
-    target = client.get_or_create_collection(
-        name=target_collection,
-        metadata={"hnsw:space": "cosine"}
-    )
+    existing = [c.name for c in client.get_collections().collections]
+    if target_collection not in existing:
+        from qdrant_client.models import Distance, VectorParams
+        client.create_collection(
+            collection_name=target_collection,
+            vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
+        )
 
     seen_hashes = set()
     total_added = 0
@@ -168,11 +273,17 @@ def merge_collections(
     for source_name in source_collections:
         print(f"Merging '{source_name}'...")
 
-        source = client.get_collection(source_name)
-        results = source.get(include=["documents", "metadatas", "embeddings"])
+        results = client.scroll(
+            collection_name=source_name,
+            limit=100000,
+            with_payload=True,
+            with_vectors=True
+        )
 
-        for i in range(len(results["ids"])):
-            content = results["documents"][i] if results["documents"] else ""
+        points = results[0]
+
+        for p in points:
+            content = p.payload.get("content", "")
 
             # Deduplication
             if deduplicate:
@@ -182,18 +293,17 @@ def merge_collections(
                     continue
                 seen_hashes.add(content_hash)
 
-            # Create new ID to avoid collisions
-            new_id = f"{source_name}_{results['ids'][i]}"
+            # Track source in payload
+            payload = p.payload.copy()
+            payload["merged_from"] = source_name
 
-            # Track source in metadata
-            meta = results["metadatas"][i] if results["metadatas"] else {}
-            meta["merged_from"] = source_name
-
-            target.add(
-                ids=[new_id],
-                documents=[content],
-                metadatas=[meta],
-                embeddings=[results["embeddings"][i]] if results["embeddings"] else None
+            client.upsert(
+                collection_name=target_collection,
+                points=[PointStruct(
+                    id=hash(f"{source_name}_{p.id}") % (2**63),
+                    vector=p.vector,
+                    payload=payload
+                )]
             )
             total_added += 1
 
@@ -203,20 +313,22 @@ def merge_collections(
 ```
 
 
-## Operation 6: Archive Collection
+## Operation 5: Archive Collection
 
 **Use case**: Project ended, keep data but mark as inactive
 
 ```python
+from pathlib import Path
+
 def archive_collection(
     collection_name: str,
-    db_path: str = "./rag/database/chroma"
+    qdrant_url: str = "http://localhost:6333"
 ):
     """
     Archive a collection (export + delete with marker file).
     """
     # Export
-    export_path = export_collection(collection_name, db_path=db_path)
+    export_path = export_collection(collection_name, qdrant_url=qdrant_url)
 
     # Move to archives
     archive_dir = Path("archives")
@@ -226,21 +338,23 @@ def archive_collection(
     Path(export_path).rename(archive_path)
 
     # Delete from database
-    client = chromadb.PersistentClient(path=db_path)
+    client = QdrantClient(url=qdrant_url)
     client.delete_collection(collection_name)
 
     # Create marker file
+    from datetime import datetime
     marker_path = archive_dir / f"{collection_name}.archived"
     with open(marker_path, "w") as f:
-        f.write(f"Archived: {datetime.now().isoformat()}
-")
-        f.write(f"Export: {archive_path}
-")
+        f.write(f"Archived: {datetime.now().isoformat()}\n")
+        f.write(f"Export: {archive_path}\n")
 
     print(f"✅ Archived '{collection_name}' to {archive_path}")
 
 
-def restore_archive(collection_name: str):
+def restore_archive(
+    collection_name: str,
+    qdrant_url: str = "http://localhost:6333"
+):
     """Restore an archived collection."""
     archive_dir = Path("archives")
 
@@ -253,7 +367,7 @@ def restore_archive(collection_name: str):
     export_path = sorted(exports)[-1]
 
     # Import
-    import_collection(str(export_path), new_name=collection_name)
+    import_collection(str(export_path), new_name=collection_name, qdrant_url=qdrant_url)
 
     # Remove marker
     marker = archive_dir / f"{collection_name}.archived"
@@ -262,3 +376,11 @@ def restore_archive(collection_name: str):
 
     print(f"✅ Restored '{collection_name}' from archive")
 ```
+
+## Refinement Notes
+
+> Add notes as you use these migration tools.
+
+- [ ] Export/import tested
+- [ ] Merge with deduplication verified
+- [ ] Archive/restore workflow complete

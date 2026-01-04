@@ -49,15 +49,15 @@ async def check_collection_health(collection: str):
     if stats['count'] == 0:
         print("❌ Collection is empty!")
 
-# 2. Check ChromaDB is accessible
-def check_chroma_connection():
-    import chromadb
+# 2. Check Qdrant is accessible
+def check_qdrant_connection():
+    from qdrant_client import QdrantClient
     try:
-        client = chromadb.PersistentClient(path="./rag/database/chroma")
-        collections = client.list_collections()
-        print(f"✅ ChromaDB connected, {len(collections)} collections")
+        client = QdrantClient(url="http://localhost:6333")
+        collections = client.get_collections()
+        print(f"✅ Qdrant connected, {len(collections.collections)} collections")
     except Exception as e:
-        print(f"❌ ChromaDB error: {e}")
+        print(f"❌ Qdrant error: {e}")
 
 # 3. Verify embedding model loads
 def check_embeddings():
@@ -72,15 +72,17 @@ def check_embeddings():
 
 **Common Causes**:
 - Collection name typo
-- ChromaDB path incorrect
-- Database files corrupted
+- Qdrant server not running
+- Network connectivity issues
 - Embedding model not downloaded
 
 **Solutions**:
 ```bash
-# Reset ChromaDB (caution: deletes data)
-rm -rf ./rag/database/chroma
-mkdir -p ./rag/database/chroma
+# Restart Qdrant (if using Docker)
+docker restart qdrant
+
+# Check Qdrant health
+curl http://localhost:6333/health
 
 # Re-download embedding model
 python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
@@ -286,8 +288,8 @@ echo -n "Python: "
 python --version 2>/dev/null || echo "❌ Not found"
 
 # Check dependencies
-echo -n "ChromaDB: "
-python -c "import chromadb; print('✅')" 2>/dev/null || echo "❌"
+echo -n "Qdrant Client: "
+python -c "import qdrant_client; print('✅')" 2>/dev/null || echo "❌"
 
 echo -n "Sentence Transformers: "
 python -c "import sentence_transformers; print('✅')" 2>/dev/null || echo "❌"

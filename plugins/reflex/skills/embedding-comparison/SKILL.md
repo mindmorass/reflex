@@ -85,16 +85,20 @@ def create_test_dataset(
 
 
 # Example: Create test dataset from your actual content
-def create_from_collection(collection_name: str, sample_size: int = 50) -> Dict:
-    """Create test dataset from existing collection."""
-    import chromadb
+def create_from_qdrant(collection_name: str, sample_size: int = 50) -> Dict:
+    """Create test dataset from existing Qdrant collection."""
+    from qdrant_client import QdrantClient
 
-    client = chromadb.PersistentClient(path="./rag/database/chroma")
-    collection = client.get_collection(collection_name)
+    client = QdrantClient(url="http://localhost:6333")
 
-    # Get sample documents
-    results = collection.get(limit=sample_size, include=["documents"])
-    documents = results["documents"]
+    # Scroll through collection to get samples
+    results = client.scroll(
+        collection_name=collection_name,
+        limit=sample_size,
+        with_payload=True
+    )
+
+    documents = [p.payload.get("content", "") for p in results[0]]
 
     # You'll need to manually create queries and mark relevance
     # This is the ground truth that benchmarks against
@@ -111,7 +115,7 @@ EXAMPLE_DATASET = {
     "documents": [
         "Python is a high-level programming language known for readability.",
         "FastAPI is a modern web framework for building APIs with Python.",
-        "ChromaDB is a vector database for AI applications.",
+        "Qdrant is a vector database for AI applications.",
         "Docker containers provide isolated runtime environments.",
         "REST APIs use HTTP methods for client-server communication.",
     ],
@@ -223,8 +227,7 @@ def compute_metrics(
 
 def benchmark_model(model_name: str, dataset: Dict) -> Dict:
     """Benchmark a single model."""
-    print(f"
-Benchmarking: {model_name}")
+    print(f"\nBenchmarking: {model_name}")
 
     # Load model (time it)
     load_start = time.perf_counter()
@@ -278,8 +281,7 @@ def run_benchmark(dataset_path: str = "test_dataset.json") -> List[Dict]:
 
 def print_results_table(results: List[Dict]):
     """Print results as formatted table."""
-    print("
-" + "=" * 80)
+    print("\n" + "=" * 80)
     print("BENCHMARK RESULTS")
     print("=" * 80)
 
@@ -302,73 +304,7 @@ if __name__ == "__main__":
     # Save results
     with open("benchmark_results.json", "w") as f:
         json.dump(results, f, indent=2)
-    print("
-Results saved to benchmark_results.json")
-```
-
-### Step 3: Side-by-Side Comparison
-
-```python
-#!/usr/bin/env python3
-"""Interactive comparison of search results between models."""
-
-from sentence_transformers import SentenceTransformer
-import numpy as np
-
-def compare_search(
-    query: str,
-    documents: list,
-    models: list,
-    top_k: int = 3
-):
-    """Compare search results across models."""
-    print(f"
-Query: {query}")
-    print("=" * 60)
-
-    for model_name in models:
-        model = SentenceTransformer(model_name)
-
-        # Encode
-        q_emb = model.encode([query])[0]
-        doc_embs = model.encode(documents)
-
-        # Compute similarities
-        sims = [
-            np.dot(q_emb, d) / (np.linalg.norm(q_emb) * np.linalg.norm(d))
-            for d in doc_embs
-        ]
-
-        # Get top results
-        top_indices = np.argsort(sims)[-top_k:][::-1]
-
-        print(f"
-{model_name}:")
-        for rank, idx in enumerate(top_indices, 1):
-            print(f"  {rank}. [{sims[idx]:.3f}] {documents[idx][:60]}...")
-
-
-# Interactive usage
-if __name__ == "__main__":
-    # Your documents
-    docs = [
-        "The authentication module uses JWT tokens for stateless auth.",
-        "Database connections are pooled using SQLAlchemy.",
-        "API rate limiting is implemented in the middleware layer.",
-        "User sessions are stored in Redis for fast access.",
-        "The caching strategy uses a write-through pattern.",
-    ]
-
-    models = ["all-MiniLM-L6-v2", "all-mpnet-base-v2"]
-
-    queries = [
-        "How does login work?",
-        "Where is caching handled?",
-        "How are database connections managed?",
-    ]
-
-    for query in queries:
-        compare_search(query, docs, models)
+    print("\nResults saved to benchmark_results.json")
 ```
 
 ## Decision Framework
@@ -438,55 +374,67 @@ python scripts/rebuild_router.py
 """Re-embed all collections with a new model."""
 
 import os
-import chromadb
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, VectorParams, PointStruct
 from sentence_transformers import SentenceTransformer
 
 NEW_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
-DB_PATH = "./rag/database/chroma"
+QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 
-def reembed_collection(collection_name: str, model: SentenceTransformer):
+def reembed_collection(collection_name: str, model: SentenceTransformer, client: QdrantClient):
     """Re-embed a single collection."""
-    client = chromadb.PersistentClient(path=DB_PATH)
 
     # Get existing data
-    old_coll = client.get_collection(collection_name)
-    data = old_coll.get(include=["documents", "metadatas"])
+    results = client.scroll(
+        collection_name=collection_name,
+        limit=10000,
+        with_payload=True
+    )
 
-    if not data["ids"]:
+    points = results[0]
+    if not points:
         print(f"  {collection_name}: empty, skipping")
         return
 
-    # Delete and recreate
-    client.delete_collection(collection_name)
-    new_coll = client.create_collection(
-        name=collection_name,
-        metadata={"hnsw:space": "cosine"}
-    )
+    # Extract documents
+    documents = [p.payload.get("content", "") for p in points]
 
     # Re-embed
-    new_embeddings = model.encode(data["documents"]).tolist()
+    new_embeddings = model.encode(documents).tolist()
+    vector_size = len(new_embeddings[0])
 
-    new_coll.add(
-        ids=data["ids"],
-        documents=data["documents"],
-        metadatas=data["metadatas"],
-        embeddings=new_embeddings
+    # Delete and recreate collection
+    client.delete_collection(collection_name)
+    client.create_collection(
+        collection_name=collection_name,
+        vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE)
     )
 
-    print(f"  {collection_name}: re-embedded {len(data['ids'])} documents")
+    # Re-add points
+    new_points = [
+        PointStruct(
+            id=p.id,
+            vector=new_embeddings[i],
+            payload=p.payload
+        )
+        for i, p in enumerate(points)
+    ]
+
+    client.upsert(collection_name=collection_name, points=new_points)
+    print(f"  {collection_name}: re-embedded {len(points)} documents")
 
 
 def main():
     print(f"Re-embedding with model: {NEW_MODEL}")
 
     model = SentenceTransformer(NEW_MODEL)
-    client = chromadb.PersistentClient(path=DB_PATH)
+    client = QdrantClient(url=QDRANT_URL)
 
-    collections = client.list_collections()
+    collections = client.get_collections().collections
     print(f"Found {len(collections)} collections")
 
     for coll in collections:
-        reembed_collection(coll.name, model)
+        reembed_collection(coll.name, model, client)
 
     print("✅ Re-embedding complete!")
 

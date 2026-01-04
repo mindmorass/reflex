@@ -40,7 +40,7 @@ This workspace provides a reusable, multi-project automation system with:
                               ▼
                     ┌─────────────────┐
                     │   RAG Server    │
-                    │   (ChromaDB)    │
+                    │    (Qdrant)     │
                     └─────────────────┘
 ```
 
@@ -72,17 +72,17 @@ Build in this sequence for incremental testing:
 
 ## Key Technical Decisions
 
-### Vector Database: ChromaDB
+### Vector Database: Qdrant
 ```python
-# Why ChromaDB:
-# - Embedded (no separate server)
-# - Python-native
-# - Collections = project isolation
-# - Simple API
+# Why Qdrant:
+# - High performance vector search
+# - Production-ready with persistence
+# - REST and gRPC APIs
+# - Excellent filtering capabilities
 
-import chromadb
-client = chromadb.PersistentClient(path="./rag/database/chroma")
-collection = client.get_or_create_collection("project_alpha_docs")
+from qdrant_client import QdrantClient
+client = QdrantClient(url="http://localhost:6333")
+# Collections managed via MCP server with COLLECTION_NAME env var
 ```
 
 ### Embeddings: all-MiniLM-L6-v2
@@ -240,7 +240,7 @@ As we build, update docs when:
 pyyaml>=6.0
 python-dotenv>=1.0.0
 mcp>=1.0.0
-chromadb>=0.4.0
+qdrant-client>=1.7.0
 sentence-transformers>=2.2.0
 semantic-router>=0.1.0
 aiofiles>=23.0.0

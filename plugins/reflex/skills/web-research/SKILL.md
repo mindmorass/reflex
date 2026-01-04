@@ -12,9 +12,8 @@ Combines WebSearch with automatic Qdrant storage to build a searchable knowledge
 ```
 1. Check Qdrant first    → qdrant-find for existing knowledge
 2. Search if needed      → WebSearch for current information
-3. Process images        → Generate thumbnails for visual content
-4. Store valuable finds  → qdrant-store with rich metadata
-5. Return synthesized    → Combine stored + new knowledge
+3. Store valuable finds  → qdrant-store with rich metadata
+4. Return synthesized    → Combine stored + new knowledge
 ```
 
 ## Step 1: Check Existing Knowledge
@@ -37,37 +36,7 @@ Tool: WebSearch
 Query: "<refined search query>"
 ```
 
-## Step 3: Image Handling
-
-When search results reference images:
-
-**Default behavior:** Create thumbnails, don't download full images.
-
-```bash
-# Generate 200px wide thumbnail using ImageMagick
-convert "<image_url>" -resize 200x -quality 80 "/tmp/thumb_<hash>.jpg"
-
-# Or using sips on macOS (no ImageMagick needed)
-curl -sL "<image_url>" -o /tmp/original.jpg && \
-  sips -Z 200 /tmp/original.jpg --out "/tmp/thumb_<hash>.jpg"
-```
-
-**Store image reference with thumbnail:**
-```
-Metadata:
-  content_type: "image"
-  original_url: "<full image URL>"
-  thumbnail_path: "/tmp/thumb_<hash>.jpg"
-  dimensions: "1920x1080"
-  thumbnail_size: "200x112"
-```
-
-**When to download full images:**
-- User explicitly requests full resolution
-- Image is a diagram/schematic needed for analysis
-- Image contains text that needs OCR
-
-## Step 4: Store Results
+## Step 3: Store Results
 
 After getting valuable results, store with rich metadata:
 
@@ -122,7 +91,7 @@ Metadata:
 | Field | Type | Description |
 |-------|------|-------------|
 | source | string | Origin: `web_search`, `api_docs`, `github`, `manual` |
-| content_type | string | `text`, `code`, `image`, `diagram`, `video_transcript` |
+| content_type | string | `text`, `code`, `image`, `video_transcript` |
 | harvested_at | string | ISO 8601 timestamp |
 
 ### Search Context
@@ -167,14 +136,11 @@ Metadata:
 | supersedes | string | ID of entry this replaces |
 | parent_topic | string | Broader topic this belongs to |
 
-### Image-Specific Fields
+### Image References (URL only, no download)
 
 | Field | Type | Description |
 |-------|------|-------------|
-| original_url | string | Full resolution image URL |
-| thumbnail_path | string | Local path to thumbnail |
-| dimensions | string | Original dimensions `WxH` |
-| thumbnail_size | string | Thumbnail dimensions `WxH` |
+| image_url | string | URL to the image |
 | alt_text | string | Image description |
 | image_type | string | `photo`, `diagram`, `screenshot`, `chart`, `icon` |
 
@@ -201,13 +167,6 @@ qdrant-find with filter:
   project: "reflex"
 ```
 
-**Find diagrams and images:**
-```
-qdrant-find with filter:
-  content_type: "image"
-  image_type: "diagram"
-```
-
 ## When to Store
 
 **Always store:**
@@ -216,13 +175,11 @@ qdrant-find with filter:
 - Error solutions and workarounds
 - Best practices and recommendations
 - Tool comparisons and evaluations
-- Architectural diagrams (as thumbnails with references)
 
 **Skip storing:**
 - Simple factual lookups (dates, definitions)
 - Ephemeral information (current weather, stock prices)
 - Information already in Qdrant with same content
-- Decorative images with no informational value
 
 ## Example: Full Research Flow
 
@@ -237,12 +194,7 @@ qdrant-find: "GitHub Actions Python testing setup"
 WebSearch: "GitHub Actions Python pytest workflow 2025"
 → Returns results with workflow examples
 
-# Step 3: Process images (if any diagrams found)
-# E.g., CI/CD pipeline diagram
-curl -sL "https://example.com/ci-diagram.png" -o /tmp/ci.png
-sips -Z 200 /tmp/ci.png --out /tmp/thumb_ci_abc123.jpg
-
-# Step 4: Store text content
+# Step 3: Store
 qdrant-store:
   Information: |
     # GitHub Actions Python Testing Setup
@@ -271,6 +223,9 @@ qdrant-store:
           - run: pytest --cov
     ```
 
+    ## Sources
+    - [GitHub Actions Python Guide](https://docs.github.com/en/actions/...)
+
   Metadata:
     source: "web_search"
     content_type: "code"
@@ -288,27 +243,6 @@ qdrant-store:
     freshness: "current"
     depth: "detailed"
     related_topics: ["testing", "ci-cd", "yaml", "github"]
-    project: null
-
-# Step 5: Store diagram (if found)
-qdrant-store:
-  Information: |
-    CI/CD Pipeline Diagram for Python GitHub Actions
-    Shows: checkout → setup-python → install deps → run tests → upload coverage
-
-  Metadata:
-    source: "web_search"
-    content_type: "image"
-    image_type: "diagram"
-    harvested_at: "2025-01-04T10:30:00Z"
-    original_url: "https://example.com/ci-diagram.png"
-    thumbnail_path: "/tmp/thumb_ci_abc123.jpg"
-    dimensions: "1200x600"
-    thumbnail_size: "200x100"
-    alt_text: "GitHub Actions Python CI/CD pipeline flow"
-    category: "technology"
-    subcategory: "ci-cd"
-    related_topics: ["github-actions", "python", "testing"]
 ```
 
 ## Integration with Other Skills
@@ -317,4 +251,3 @@ qdrant-store:
 - **qdrant-patterns**: Follows same metadata conventions
 - **knowledge-ingestion-patterns**: Compatible chunking approach
 - **github-harvester**: Similar metadata schema for GitHub content
-- **pdf-harvester**: Diagram extraction follows same thumbnail pattern

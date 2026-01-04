@@ -70,14 +70,9 @@ Metadata:
   project: "<project name or null>"
 ```
 
-**Image handling:** Create thumbnails (200px), don't download full images:
-```bash
-curl -sL "<image_url>" -o /tmp/img.jpg && sips -Z 200 /tmp/img.jpg --out /tmp/thumb_<hash>.jpg
-```
+**Images:** Store URL references only (no download). Use `content_type: "image"`, `image_url`, `image_type`
 
-Store image references with: `content_type: "image"`, `original_url`, `thumbnail_path`, `image_type`
-
-**Skip storing:** Trivial lookups, ephemeral info, duplicates, decorative images
+**Skip storing:** Trivial lookups, ephemeral info, duplicates
 
 ## Git Commits
 

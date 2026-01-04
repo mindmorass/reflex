@@ -18,6 +18,20 @@ git clone https://github.com/mindmorass/reflex.git
 claude --plugin-dir /path/to/reflex
 ```
 
+### Recommended Companion Plugins
+
+Reflex works best with these plugins (checked on session start):
+
+```bash
+# Official Claude Code plugins
+/install-plugin claude-code-templates   # testing-suite, security-pro, documentation-generator
+/install-plugin claude-code-workflows   # developer-essentials, python-development, javascript-typescript
+
+# Superpowers - TDD & systematic development workflows
+/plugin marketplace add obra/superpowers-marketplace
+/plugin install superpowers@superpowers-marketplace
+```
+
 ## Features
 
 ### 10 Specialized Agents
@@ -46,7 +60,7 @@ Key skills include:
 - `docker-patterns` - Container best practices
 - `microsoft-docs` - Microsoft documentation lookup
 
-> **Note:** Code review, testing, security, and CI/CD patterns are available via official Claude Code plugins (testing-suite, security-pro, developer-essentials).
+> **Note:** Code review, testing, security, and CI/CD patterns are provided by companion plugins. See [Recommended Companion Plugins](#recommended-companion-plugins).
 
 ### Commands
 

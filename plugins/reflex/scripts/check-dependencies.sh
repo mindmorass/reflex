@@ -78,6 +78,12 @@ if ! check_plugin "claude-code-workflows" "anthropics/claude-code-workflows"; th
   RECOMMENDATIONS+=("developer-essentials, python-development, javascript-typescript")
 fi
 
+# Check for superpowers (provides TDD workflows, systematic debugging, etc.)
+if ! check_plugin "superpowers" "obra/superpowers-marketplace"; then
+  MISSING_PLUGINS+=("superpowers@superpowers-marketplace")
+  RECOMMENDATIONS+=("test-driven-development, systematic-debugging, brainstorming, subagent-driven-development")
+fi
+
 # =============================================================================
 # Build Context Output
 # =============================================================================
@@ -98,7 +104,8 @@ if [[ ${#MISSING_PLUGINS[@]} -gt 0 ]]; then
     CONTEXT="${CONTEXT}\n- ${MISSING_PLUGINS[$i]} (provides: ${RECOMMENDATIONS[$i]})"
   done
 
-  CONTEXT="${CONTEXT}\n\nInstall with: /install-plugin <plugin-name>"
+  CONTEXT="${CONTEXT}\n\nInstall official plugins: /install-plugin <plugin-name>"
+  CONTEXT="${CONTEXT}\nInstall superpowers: /plugin marketplace add obra/superpowers-marketplace && /plugin install superpowers@superpowers-marketplace"
 fi
 
 # Output JSON for SessionStart hook (only if we have context)

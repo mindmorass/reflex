@@ -1,6 +1,6 @@
 ---
 description: List available Reflex skills
-allowed-tools: Read, Glob
+allowed-tools: Bash(python3:*)
 ---
 
 # Reflex Skills
@@ -9,45 +9,56 @@ List all available skills in the Reflex plugin.
 
 ## Instructions
 
-Read the skills from the reflex skills directory and display them with their descriptions.
+Run this Python script to list all skills with descriptions:
 
-The skills directory is located at: `${CLAUDE_CONFIG_DIR:-~/.claude}/reflex/skills/`
+```bash
+python3 << 'PYEOF'
+from pathlib import Path
+import os
 
-Each skill has a `SKILL.md` file containing its documentation. Extract the skill name from the directory name and the description from the first paragraph after the title in each SKILL.md.
+plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", ".")
+skills_dir = Path(plugin_root) / "skills"
 
-## Output Format
+if not skills_dir.exists():
+    print("Skills directory not found")
+    exit(1)
 
-Display as a table:
+skills = []
+for skill_path in sorted(skills_dir.iterdir()):
+    if skill_path.is_dir():
+        skill_file = skill_path / "SKILL.md"
+        if skill_file.exists():
+            desc = ""
+            with open(skill_file) as f:
+                for line in f:
+                    if line.startswith("description:"):
+                        desc = line.replace("description:", "").strip()
+                        break
+            skills.append((skill_path.name, desc[:65]))
 
-| Skill | Description |
-|-------|-------------|
-| skill-name | Brief description from SKILL.md |
+print(f"## {len(skills)} Reflex Skills\n")
+print("| Skill | Description |")
+print("|-------|-------------|")
+for name, desc in skills:
+    print(f"| **{name}** | {desc} |")
+PYEOF
+```
 
-## Available Skills (36)
+## Skill Categories
 
-**Knowledge & RAG:**
-- qdrant-patterns, rag-builder, rag-wrapper, research-patterns
-- knowledge-ingestion-patterns, collection-migration, embedding-comparison
+| Category | Skills |
+|----------|--------|
+| **RAG & Knowledge** | qdrant-patterns, rag-builder, rag-wrapper, knowledge-ingestion-patterns, research-patterns, web-research |
+| **Harvesting** | github-harvester, youtube-harvester, pdf-harvester, site-crawler |
+| **Publishing** | obsidian-publisher, joplin-publisher |
+| **Infrastructure** | aws-patterns, terraform-patterns, kubernetes-patterns, docker-patterns, observability-patterns |
+| **Database** | database-migration-patterns, collection-migration, embedding-comparison |
+| **Video/Streaming** | ffmpeg-patterns, streaming-patterns, video-upload-patterns, ai-video-generation, podcast-production |
+| **Building** | agent-builder, workflow-builder, router-builder, mcp-server-builder, workspace-builder, rag-builder |
+| **Diagrams** | image-to-diagram, graphviz-diagrams |
+| **Analysis** | analysis-patterns, task-decomposition, project-onboarding |
+| **Microsoft** | microsoft-docs, microsoft-code-reference |
 
-**Data Collection:**
-- github-harvester, pdf-harvester, site-crawler, youtube-harvester
+## Note
 
-**Media & Video:**
-- ffmpeg-patterns, streaming-patterns, video-upload-patterns
-- ai-video-generation, podcast-production
-
-**Infrastructure:**
-- docker-patterns, kubernetes-patterns, terraform-patterns
-- aws-patterns, observability-patterns, database-migration-patterns
-
-**Claude Code Building:**
-- agent-builder, mcp-server-builder, router-builder, workflow-builder, prompt-template
-
-**Documentation & Publishing:**
-- graphviz-diagrams, obsidian-publisher, joplin-publisher
-
-**Project & Analysis:**
-- project-onboarding, task-decomposition, workspace-builder
-- analysis-patterns, microsoft-docs, microsoft-code-reference
-
-**Note:** Code review, testing, security, mermaid diagrams, and debugging are provided by official plugins (testing-suite, security-pro, documentation-generator, developer-essentials).
+Code review, testing, security, and mermaid diagrams are provided by official plugins (testing-suite, security-pro, documentation-generator, developer-essentials).

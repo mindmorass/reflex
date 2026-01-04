@@ -1,15 +1,15 @@
 # Reflex - Claude Code Plugin
 
-Reflex is a Claude Code plugin providing opinionated sub-agents and skills for application development, infrastructure, and data engineering workflows.
+Reflex is a Claude Code plugin providing skills and RAG integration for application development, infrastructure, and data engineering workflows.
 
 ## Project Structure
 
 ```
 plugins/reflex/
 ├── .claude-plugin/plugin.json   # Plugin manifest
-├── agents/                      # 13 sub-agent definitions
+├── agents/                      # 1 agent (rag-proxy)
 ├── commands/                    # Slash commands
-├── skills/                      # 39 skill definitions
+├── skills/                      # 41 skill definitions
 ├── hooks/                       # Session hooks
 ├── scripts/                     # Helper scripts
 ├── .mcp.json                    # MCP server configurations
@@ -22,7 +22,7 @@ plugins/reflex/
 |---------|-------------|
 | `/reflex:agents` | List available agents |
 | `/reflex:skills` | List available skills |
-| `/reflex:task` | Route task to appropriate agent |
+| `/reflex:task` | Route task with RAG context |
 | `/reflex:gitconfig` | Display git configuration |
 | `/reflex:certcollect` | Collect SSL certificates |
 | `/reflex:audit` | Control audit logging |
@@ -32,19 +32,9 @@ plugins/reflex/
 
 | Agent | Purpose |
 |-------|---------|
-| analyst | Data analysis, pattern recognition, troubleshooting |
-| coder | Code development, refactoring, implementation |
-| content-publisher | Video uploads to YouTube/TikTok/Vimeo, metadata, scheduling |
-| devops | Infrastructure, CI/CD, deployments |
-| harvester | Data collection from web, APIs, documents, Qdrant storage |
-| planner | Task breakdown, project planning |
 | rag-proxy | RAG wrapper for any agent, enriches with Qdrant context |
-| researcher | Investigation, documentation review, Qdrant queries |
-| reviewer | Code review, security review |
-| streamer | Live streaming setup, RTMP, OBS automation, multi-platform |
-| tester | Test generation, coverage analysis |
-| video-editor | Video/audio editing, transcoding, FFmpeg operations |
-| writer | Documentation, technical writing |
+
+Most agent functionality is provided by official plugins (testing-suite, security-pro, documentation-generator, developer-essentials) and Reflex skills.
 
 ## Git Commits
 

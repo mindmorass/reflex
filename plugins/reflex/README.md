@@ -34,33 +34,28 @@ Reflex works best with these plugins (checked on session start):
 
 ## Features
 
-### 10 Specialized Agents
+### RAG Integration
 
 | Agent | Purpose |
 |-------|---------|
-| `analyst` | Data analysis, pattern recognition, troubleshooting |
-| `coder` | Code development, refactoring, implementation |
-| `devops` | Infrastructure, CI/CD, deployments |
-| `harvester` | Data collection from web, APIs, documents, Qdrant storage |
-| `planner` | Task breakdown, project planning |
 | `rag-proxy` | RAG wrapper for any agent, enriches with Qdrant context |
-| `researcher` | Investigation, documentation review, Qdrant queries |
-| `reviewer` | Code review, security review |
-| `tester` | Test generation, coverage analysis |
-| `writer` | Documentation, technical writing |
 
-### 26 Skills
+Use `/reflex:task "your task" --rag` to enrich tasks with stored knowledge before delegating to official plugin agents.
 
-Skills provide reusable knowledge for agents. Run `/reflex:skills` to list all available skills.
+### 41 Skills
+
+Skills provide reusable knowledge patterns. Run `/reflex:skills` to list all.
 
 Key skills include:
-- `qdrant-patterns` - Qdrant vector storage and retrieval
-- `rag-wrapper` - Wrap any agent with RAG context
-- `mermaid-diagrams` - Create diagrams for documentation
+- `qdrant-patterns` - Vector storage and retrieval
+- `analysis-patterns` - Data analysis and troubleshooting
+- `research-patterns` - Knowledge retrieval workflows
+- `task-decomposition` - Breaking down complex tasks
 - `docker-patterns` - Container best practices
-- `microsoft-docs` - Microsoft documentation lookup
+- `ffmpeg-patterns` - Video/audio processing
+- `streaming-patterns` - Live streaming setup
 
-> **Note:** Code review, testing, security, and CI/CD patterns are provided by companion plugins. See [Recommended Companion Plugins](#recommended-companion-plugins).
+> **Note:** Code review, testing, security, and CI/CD are provided by companion plugins. See [Recommended Companion Plugins](#recommended-companion-plugins).
 
 ### Commands
 
@@ -99,9 +94,9 @@ Pre-configured in `.mcp.json`:
 plugins/reflex/
 ├── .claude-plugin/
 │   └── plugin.json      # Plugin manifest
-├── agents/              # 10 sub-agent definitions
+├── agents/              # 1 agent (rag-proxy)
 ├── commands/            # Slash commands
-├── skills/              # 26 skill definitions
+├── skills/              # 41 skill definitions
 ├── hooks/               # Session hooks
 ├── scripts/             # Helper scripts
 ├── .mcp.json            # MCP server configurations
@@ -110,12 +105,11 @@ plugins/reflex/
 
 ## How It Works
 
-Reflex agents are Claude Code sub-agents with bound skills and tool access. When you use `/reflex:task`, the task router analyzes your request and delegates to the most appropriate agent.
+Reflex provides skills (reusable knowledge patterns) and RAG integration via Qdrant.
 
-Each agent has:
-- **Tools**: Specific Claude Code tools they can use (Read, Write, Bash, etc.)
-- **Skills**: Knowledge domains they can reference
-- **Handoff guidance**: Suggestions for which agent should handle the next step
+- **Skills**: Invoke with the Skill tool for domain-specific guidance
+- **RAG**: Use `/reflex:task --rag` to enrich tasks with stored knowledge
+- **Agents**: Use official plugin agents (python-pro, security-auditor, etc.) for implementation
 
 ## License
 

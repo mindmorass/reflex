@@ -675,16 +675,17 @@ def process_file(
     path: Path,
     collection: str,
     chunk_size: int,
-    qdrant_url: str
+    qdrant_url: str,
+    max_file_size: int = MAX_FILE_SIZE
 ) -> Dict:
     """Process a single file."""
     print(f"\nProcessing: {path.name}")
 
     # Check file size
     file_size = path.stat().st_size
-    if file_size > MAX_FILE_SIZE:
+    if file_size > max_file_size:
         size_mb = file_size / (1024 * 1024)
-        limit_mb = MAX_FILE_SIZE / (1024 * 1024)
+        limit_mb = max_file_size / (1024 * 1024)
         raise FileSizeError(
             f"File size ({size_mb:.1f}MB) exceeds limit ({limit_mb:.0f}MB)"
         )
@@ -747,8 +748,17 @@ def main():
         action="store_true",
         help="Recursively process directories"
     )
+    parser.add_argument(
+        "--max-file-size",
+        type=int,
+        default=int(os.environ.get("MAX_FILE_SIZE_MB", 100)),
+        help="Maximum file size in MB (default: 100, or MAX_FILE_SIZE_MB env var)"
+    )
 
     args = parser.parse_args()
+
+    # Convert MB to bytes for file size limit
+    max_file_size = args.max_file_size * 1024 * 1024
 
     # Collect files to process
     files = []
@@ -783,7 +793,8 @@ def main():
                 path=path,
                 collection=args.collection,
                 chunk_size=args.chunk_size,
-                qdrant_url=args.qdrant_url
+                qdrant_url=args.qdrant_url,
+                max_file_size=max_file_size
             )
             results.append(result)
         except QdrantConnectionError as e:

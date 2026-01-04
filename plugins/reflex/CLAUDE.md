@@ -9,7 +9,7 @@ plugins/reflex/
 ├── .claude-plugin/plugin.json   # Plugin manifest
 ├── agents/                      # 1 agent (rag-proxy)
 ├── commands/                    # Slash commands
-├── skills/                      # 36 skill definitions
+├── skills/                      # 38 skill definitions
 ├── hooks/                       # Session hooks
 ├── scripts/                     # Helper scripts
 ├── .mcp.json                    # MCP server configurations

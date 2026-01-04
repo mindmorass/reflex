@@ -1,27 +1,43 @@
 ---
 description: Collect SSL/TLS certificates from websites
-allowed-tools: Bash(npm start -- certcollect:*), Bash(openssl:*)
-argument-hint: <url> [-v] [-c] [-o path] [-f pem|der|both]
+allowed-tools: Bash(openssl:*), Bash(echo:*)
+argument-hint: <hostname> [-v|--verbose] [-c|--chain]
 ---
 
 # Certificate Collection
 
 Collect SSL/TLS certificates from a website using openssl.
 
-## Command
+## Instructions
+
+Extract the hostname from the user's input (remove https:// if present).
+
+### Basic certificate fetch:
 
 ```bash
-!npm start -- certcollect $ARGUMENTS 2>&1 | grep -v "DEP0040\|punycode\|node --trace"
+echo | openssl s_client -connect <hostname>:443 -servername <hostname> 2>/dev/null | openssl x509 -noout -subject -issuer -dates
 ```
 
-## Options
+### With `-v` or `--verbose`, show full details:
 
-- `-v, --verbose` - Show certificate details (subject, issuer, validity, SANs)
-- `-c, --chain` - Include full certificate chain
-- `-o, --output <path>` - Output directory (default: ~/Desktop)
-- `-f, --format <format>` - Output format: pem, der, or both
+```bash
+echo | openssl s_client -connect <hostname>:443 -servername <hostname> 2>/dev/null | openssl x509 -noout -text
+```
+
+### With `-c` or `--chain`, show full certificate chain:
+
+```bash
+echo | openssl s_client -connect <hostname>:443 -servername <hostname> -showcerts 2>/dev/null
+```
+
+### To save certificate to file:
+
+```bash
+echo | openssl s_client -connect <hostname>:443 -servername <hostname> 2>/dev/null | openssl x509 -outform PEM > ~/Desktop/<hostname>.pem
+```
 
 ## Examples
 
-- `/reflex:certcollect github.com` - Get GitHub's certificate
-- `/reflex:certcollect github.com -v -c` - Verbose with full chain
+- `/reflex:certcollect github.com` - Basic cert info
+- `/reflex:certcollect github.com -v` - Full certificate details
+- `/reflex:certcollect github.com -c` - Show full chain

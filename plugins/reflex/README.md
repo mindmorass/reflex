@@ -63,11 +63,9 @@ Key skills include:
 |---------|-------------|
 | `/reflex:agents` | List available agents |
 | `/reflex:skills` | List available skills |
-| `/reflex:task "<task>"` | Route task to appropriate agent |
-| `/reflex:gitconfig` | Display git configuration |
-| `/reflex:certcollect <url>` | Collect SSL certificates |
-| `/reflex:audit <on\|off\|status>` | Control audit logging |
 | `/reflex:mcp` | List MCP servers |
+| `/reflex:gitconfig` | Display git configuration |
+| `/reflex:certcollect <hostname>` | Collect SSL certificates |
 
 ### MCP Servers
 

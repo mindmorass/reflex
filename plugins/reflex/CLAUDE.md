@@ -22,11 +22,9 @@ plugins/reflex/
 |---------|-------------|
 | `/reflex:agents` | List available agents |
 | `/reflex:skills` | List available skills |
-| `/reflex:task` | Route task with RAG context |
+| `/reflex:mcp` | List MCP servers |
 | `/reflex:gitconfig` | Display git configuration |
 | `/reflex:certcollect` | Collect SSL certificates |
-| `/reflex:audit` | Control audit logging |
-| `/reflex:mcp` | List MCP servers |
 
 ## Agents
 

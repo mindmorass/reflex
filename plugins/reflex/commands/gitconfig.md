@@ -1,23 +1,28 @@
 ---
 description: Display git configuration information
-allowed-tools: Bash(npm start -- gitconfig:*)
+allowed-tools: Bash(git config:*)
 argument-hint: [-v|--verbose]
 ---
 
 # Git Configuration
 
-Run the Reflex gitconfig command to display git configuration.
+Display git configuration for the current environment.
 
-## Command
+## Instructions
+
+Run git config commands to show configuration:
 
 ```bash
-!npm start -- gitconfig $ARGUMENTS 2>&1 | grep -v "DEP0040\|punycode\|node --trace"
+echo "## Git User"
+echo "- **Name**: $(git config user.name)"
+echo "- **Email**: $(git config user.email)"
+echo ""
+echo "## Core Settings"
+echo "- **Default branch**: $(git config init.defaultBranch || echo 'not set')"
+echo "- **Editor**: $(git config core.editor || echo 'not set')"
 ```
 
-## Output
-
-The command above shows your git configuration including:
-- User name and email
-- Core editor and default branch
-- Credential helper
-- With `-v`: aliases and all settings with sources
+If the user passes `-v` or `--verbose`, also show:
+- All aliases: `git config --get-regexp alias`
+- Credential helper: `git config credential.helper`
+- Remote URLs: `git remote -v`

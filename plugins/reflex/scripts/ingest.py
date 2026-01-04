@@ -229,7 +229,16 @@ def extract_mermaid(path: Path) -> Tuple[str, Dict]:
 
 def detect_mermaid_type(text: str) -> str:
     """Detect the type of Mermaid diagram."""
-    text_lower = text.strip().lower()
+    # Skip comment lines to find the diagram declaration
+    lines = text.strip().split('\n')
+    for line in lines:
+        line = line.strip().lower()
+        if line.startswith('%%') or not line:
+            continue
+        text_lower = line
+        break
+    else:
+        text_lower = text.strip().lower()
 
     if text_lower.startswith("graph ") or text_lower.startswith("flowchart "):
         return "flowchart"

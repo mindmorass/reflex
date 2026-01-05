@@ -25,6 +25,7 @@ plugins/reflex/
 | `/reflex:mcp` | List MCP servers |
 | `/reflex:gitconfig` | Display git configuration |
 | `/reflex:certcollect` | Collect SSL certificates |
+| `/reflex:langfuse` | Control LangFuse observability (on/off/status) |
 
 ## Agents
 
@@ -85,6 +86,26 @@ When committing changes, use this format (no Co-Authored-By):
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
+
+## LangFuse Observability
+
+Reflex includes optional LangFuse integration for tracing tool calls and agent interactions.
+
+**Enable/Disable:**
+```bash
+/reflex:langfuse on      # Enable tracing
+/reflex:langfuse off     # Disable tracing (default)
+/reflex:langfuse status  # Show current status
+```
+
+**Required environment variables:**
+```bash
+export LANGFUSE_HOST="http://localhost:3000"  # Optional, defaults to localhost
+export LANGFUSE_PUBLIC_KEY="pk-..."
+export LANGFUSE_SECRET_KEY="sk-..."
+```
+
+When enabled, tool calls are automatically traced to LangFuse via the PostToolUse hook.
 
 ## Installation
 

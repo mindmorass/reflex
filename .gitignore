@@ -17,3 +17,6 @@ Thumbs.db
 .mcp.json
 .playwright-mcp/
 __pycache__/
+
+# Docker secrets (use .env.example as template)
+docker/**/.env

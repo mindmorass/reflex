@@ -1,6 +1,6 @@
 # Reflex Plugin Marketplace
 
-A Claude Code plugin marketplace for application development, infrastructure, and data engineering workflows.
+A Claude Code plugin for application development, infrastructure, and data engineering workflows.
 
 ## Installation
 
@@ -9,26 +9,51 @@ A Claude Code plugin marketplace for application development, infrastructure, an
 /plugin install reflex
 ```
 
-## Available Plugins
+## Features
 
-| Plugin | Description |
-|--------|-------------|
-| [reflex](./plugins/reflex) | Opinionated sub-agents and skills for development workflows |
+| Component | Count | Description |
+|-----------|-------|-------------|
+| Skills | 38 | Development patterns, RAG, harvesting, infrastructure |
+| Commands | 7 | `/reflex:agents`, `/reflex:skills`, `/reflex:langfuse`, etc. |
+| Agents | 1 | `rag-proxy` - RAG wrapper for any agent |
+
+## Docker Services
+
+The `docker/` directory contains Docker Compose configurations for supporting services:
+
+| Service | Purpose | Port |
+|---------|---------|------|
+| [Qdrant](./docker/qdrant) | Vector database for RAG | 6333 |
+| [LangFuse](./docker/langfuse) | LLM observability | 3000 |
+
+### Quick Start
+
+```bash
+# Qdrant (required for RAG features)
+cd docker/qdrant
+cp .env.example .env
+docker compose up -d
+
+# LangFuse (optional - for observability)
+cd docker/langfuse
+cp .env.example .env
+# Edit .env and generate secrets
+docker compose up -d
+```
 
 ## Structure
 
 ```
 reflex/
-├── .claude-plugin/
-│   └── marketplace.json   # Marketplace manifest
-└── plugins/
-    └── reflex/            # Plugin directory
-        ├── .claude-plugin/
-        │   └── plugin.json
-        ├── agents/        # 10 sub-agents
-        ├── skills/        # 26 skills
-        ├── commands/      # Slash commands
-        └── ...
+├── plugins/reflex/        # Main plugin
+│   ├── agents/            # Sub-agents
+│   ├── skills/            # 38 skill definitions
+│   ├── commands/          # Slash commands
+│   ├── hooks/             # Session hooks
+│   └── scripts/           # Helper scripts
+└── docker/                # Docker services
+    ├── qdrant/            # Vector database
+    └── langfuse/          # LLM observability
 ```
 
 ## License

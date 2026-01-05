@@ -10,7 +10,7 @@ Start, stop, or check status of the LangFuse observability stack.
 
 ## Instructions
 
-The docker-compose file is located at `$CLAUDE_CONFIG_DIR/docker/langfuse/` (default: `~/.claude/docker/langfuse/`).
+The docker-compose file is located at `~/.claude/docker/langfuse/`.
 
 **Note:** LangFuse requires a `.env` file with secrets. Copy `.env.example` and fill in values before starting.
 
@@ -24,7 +24,7 @@ The docker-compose file is located at `$CLAUDE_CONFIG_DIR/docker/langfuse/` (def
 ### start
 
 ```bash
-DOCKER_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/docker/langfuse"
+DOCKER_DIR="$HOME/.claude/docker/langfuse"
 if [ ! -f "$DOCKER_DIR/.env" ]; then
     echo "Error: $DOCKER_DIR/.env not found"
     echo "Copy $DOCKER_DIR/.env.example to $DOCKER_DIR/.env and configure secrets first."
@@ -44,8 +44,7 @@ echo "Check status with: /reflex:langfuse-docker status"
 ### stop
 
 ```bash
-DOCKER_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/docker/langfuse"
-cd "$DOCKER_DIR" && docker compose down
+cd "$HOME/.claude/docker/langfuse" && docker compose down
 echo "LangFuse stopped."
 ```
 
@@ -66,8 +65,7 @@ fi
 ### logs
 
 ```bash
-DOCKER_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/docker/langfuse"
-cd "$DOCKER_DIR" && docker compose logs --tail=50
+cd "$HOME/.claude/docker/langfuse" && docker compose logs --tail=50
 ```
 
 ### No argument or invalid
@@ -86,7 +84,7 @@ Commands:
   logs    Show recent container logs
 
 Setup:
-  1. cp $CLAUDE_CONFIG_DIR/docker/langfuse/.env.example $CLAUDE_CONFIG_DIR/docker/langfuse/.env
+  1. cp ~/.claude/docker/langfuse/.env.example ~/.claude/docker/langfuse/.env
   2. Generate secrets and fill in .env
   3. /reflex:langfuse-docker start
 

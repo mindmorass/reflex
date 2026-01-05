@@ -10,7 +10,7 @@ Start, stop, or check status of the Qdrant vector database container.
 
 ## Instructions
 
-The docker-compose file is located at `$CLAUDE_CONFIG_DIR/docker/qdrant/` (default: `~/.claude/docker/qdrant/`).
+The docker-compose file is located at `~/.claude/docker/qdrant/`.
 
 ### Arguments
 
@@ -22,8 +22,7 @@ The docker-compose file is located at `$CLAUDE_CONFIG_DIR/docker/qdrant/` (defau
 ### start
 
 ```bash
-DOCKER_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/docker/qdrant"
-cd "$DOCKER_DIR" && docker compose up -d
+cd "$HOME/.claude/docker/qdrant" && docker compose up -d
 echo ""
 echo "Qdrant started on:"
 echo "  REST API: http://localhost:6333"
@@ -34,8 +33,7 @@ echo "  gRPC: localhost:6334"
 ### stop
 
 ```bash
-DOCKER_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/docker/qdrant"
-cd "$DOCKER_DIR" && docker compose down
+cd "$HOME/.claude/docker/qdrant" && docker compose down
 echo "Qdrant stopped."
 ```
 
@@ -56,8 +54,7 @@ fi
 ### logs
 
 ```bash
-DOCKER_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/docker/qdrant"
-cd "$DOCKER_DIR" && docker compose logs --tail=50
+cd "$HOME/.claude/docker/qdrant" && docker compose logs --tail=50
 ```
 
 ### No argument or invalid

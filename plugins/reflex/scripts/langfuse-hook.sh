@@ -1,11 +1,12 @@
 #!/bin/bash
 # LangFuse integration hook for Reflex
 # Called by Claude Code PostToolUse hook
-# Only traces if ~/.config/reflex/langfuse-enabled exists
+# Only traces if state file exists
 
 set -euo pipefail
 
-STATE_FILE="$HOME/.config/reflex/langfuse-enabled"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-${HOME}/.claude}"
+STATE_FILE="${CLAUDE_DIR}/reflex/langfuse-enabled"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Exit silently if LangFuse is disabled

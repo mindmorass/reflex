@@ -47,8 +47,9 @@ fi
 # Plugin Dependency Check
 # =============================================================================
 # Check if official plugins directory exists
-# Plugins are installed to ~/.claude/plugins/ or similar
-PLUGINS_DIR="${HOME}/.claude/plugins"
+# Plugins are installed to $CLAUDE_CONFIG_DIR/plugins/ (default: ~/.claude/plugins/)
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-${HOME}/.claude}"
+PLUGINS_DIR="${CLAUDE_DIR}/plugins"
 
 check_plugin() {
   local plugin_name="$1"
@@ -57,7 +58,7 @@ check_plugin() {
   # Check multiple possible locations
   if [[ -d "${PLUGINS_DIR}/${plugin_name}" ]] || \
      [[ -d "${PLUGINS_DIR}/${plugin_package}" ]] || \
-     [[ -d "${HOME}/.claude/marketplace/${plugin_package}" ]]; then
+     [[ -d "${CLAUDE_DIR}/marketplace/${plugin_package}" ]]; then
     return 0
   fi
   return 1

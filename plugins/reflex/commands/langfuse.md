@@ -10,7 +10,7 @@ Enable or disable LangFuse observability for tool calls and agent interactions.
 
 ## Instructions
 
-The state file is stored at `~/.config/reflex/langfuse-enabled`.
+The state file is stored at `$CLAUDE_CONFIG_DIR/reflex/langfuse-enabled` (default: `~/.claude/reflex/langfuse-enabled`).
 
 ### Arguments
 
@@ -21,8 +21,9 @@ The state file is stored at `~/.config/reflex/langfuse-enabled`.
 ### on
 
 ```bash
-mkdir -p ~/.config/reflex
-touch ~/.config/reflex/langfuse-enabled
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+mkdir -p "$CLAUDE_DIR/reflex"
+touch "$CLAUDE_DIR/reflex/langfuse-enabled"
 echo "LangFuse integration enabled."
 echo ""
 echo "Ensure these environment variables are set:"
@@ -34,14 +35,16 @@ echo "  LANGFUSE_SECRET_KEY"
 ### off
 
 ```bash
-rm -f ~/.config/reflex/langfuse-enabled
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+rm -f "$CLAUDE_DIR/reflex/langfuse-enabled"
 echo "LangFuse integration disabled."
 ```
 
 ### status
 
 ```bash
-if [ -f ~/.config/reflex/langfuse-enabled ]; then
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+if [ -f "$CLAUDE_DIR/reflex/langfuse-enabled" ]; then
     echo "**Status:** Enabled"
 else
     echo "**Status:** Disabled"

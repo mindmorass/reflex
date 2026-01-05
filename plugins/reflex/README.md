@@ -66,6 +66,42 @@ Key skills include:
 | `/reflex:mcp` | List MCP servers |
 | `/reflex:gitconfig` | Display git configuration |
 | `/reflex:certcollect <hostname>` | Collect SSL certificates |
+| `/reflex:notify <on\|off\|status\|test>` | macOS popup notifications |
+| `/reflex:speak <on\|off\|status\|test>` | Spoken notifications via `say` |
+| `/reflex:qdrant <start\|stop\|status\|logs>` | Control Qdrant Docker service |
+| `/reflex:langfuse <on\|off\|status>` | Enable/disable LangFuse tracing |
+| `/reflex:langfuse-docker <start\|stop\|status\|logs>` | Control LangFuse Docker service |
+
+### Notifications
+
+Reflex can notify you when agents complete tasks or input is required:
+
+```bash
+# Enable macOS popup notifications
+/reflex:notify on
+
+# Enable spoken notifications
+/reflex:speak on
+
+# Personalize speech with your name
+export REFLEX_USER_NAME="YourName"
+```
+
+Notifications auto-trigger on:
+- Agent/Task completion
+- AskUserQuestion (input required)
+
+### Docker Services
+
+Docker compose files are stored at `~/.claude/docker/`:
+
+```bash
+# Start Qdrant vector database
+/reflex:qdrant start
+
+# Start LangFuse observability stack
+/reflex:langfuse-docker start
+```
 
 ### MCP Servers
 

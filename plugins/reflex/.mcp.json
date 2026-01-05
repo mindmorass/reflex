@@ -9,11 +9,11 @@
       }
     },
     "atlassian": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://mcp.atlassian.com/v1/sse"],
+      "command": "uvx",
+      "args": ["mcp-atlassian"],
       "env": {
-        "ATLASSIAN_SITE_URL": "${ATLASSIAN_SITE_URL}",
-        "ATLASSIAN_USER_EMAIL": "${ATLASSIAN_USER_EMAIL}",
+        "ATLASSIAN_URL": "${ATLASSIAN_SITE_URL}",
+        "ATLASSIAN_USERNAME": "${ATLASSIAN_USER_EMAIL}",
         "ATLASSIAN_API_TOKEN": "${ATLASSIAN_API_TOKEN}"
       }
     },

@@ -86,6 +86,23 @@ if ! check_plugin "superpowers" "obra/superpowers-marketplace"; then
 fi
 
 # =============================================================================
+# Guardrail Default Setup (enabled by default for safety)
+# =============================================================================
+GUARDRAIL_STATE="${CLAUDE_DIR}/reflex/guardrail-enabled"
+GUARDRAIL_FIRST_RUN="${CLAUDE_DIR}/reflex/.guardrail-initialized"
+
+if [ ! -f "$GUARDRAIL_FIRST_RUN" ]; then
+  mkdir -p "${CLAUDE_DIR}/reflex"
+  touch "$GUARDRAIL_STATE"
+  touch "$GUARDRAIL_FIRST_RUN"
+  GUARDRAIL_ENABLED="new"
+elif [ -f "$GUARDRAIL_STATE" ]; then
+  GUARDRAIL_ENABLED="yes"
+else
+  GUARDRAIL_ENABLED="no"
+fi
+
+# =============================================================================
 # Build Context Output
 # =============================================================================
 CONTEXT=""
@@ -95,6 +112,12 @@ if [[ -n "$GIT_USER_NAME" ]]; then
   CONTEXT="Git user: ${GIT_USER_NAME}"
   [[ -n "$GIT_USER_EMAIL" ]] && CONTEXT="${CONTEXT} <${GIT_USER_EMAIL}>"
   CONTEXT="${CONTEXT}\n"
+fi
+
+# Add guardrail status to context (only on first run)
+if [[ "$GUARDRAIL_ENABLED" == "new" ]]; then
+  CONTEXT="${CONTEXT}\nGuardrails enabled: Destructive operations will be blocked or require confirmation."
+  CONTEXT="${CONTEXT}\nManage with: /reflex:guardrail <on|off|status|patterns>\n"
 fi
 
 # Add missing plugins warning

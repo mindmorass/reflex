@@ -328,6 +328,37 @@ DEFAULT_PATTERNS: List[Dict] = [
         "tool": "Bash",
         "field": "command"
     },
+
+    # =========================================================================
+    # MCP Tools - Atlassian (Jira/Confluence)
+    # =========================================================================
+    {
+        "name": "jira_delete_issue",
+        "severity": "high",
+        "category": "api_destructive",
+        "pattern": r"jira_delete_issue",
+        "description": "Jira issue deletion",
+        "tool": "mcp__*",
+        "field": "tool_name"
+    },
+    {
+        "name": "jira_remove_issue_link",
+        "severity": "medium",
+        "category": "api_destructive",
+        "pattern": r"jira_remove_issue_link",
+        "description": "Jira issue link removal",
+        "tool": "mcp__*",
+        "field": "tool_name"
+    },
+    {
+        "name": "confluence_delete_page",
+        "severity": "high",
+        "category": "api_destructive",
+        "pattern": r"confluence_delete_page",
+        "description": "Confluence page deletion",
+        "tool": "mcp__*",
+        "field": "tool_name"
+    },
 ]
 
 
@@ -404,7 +435,29 @@ def extract_field(tool_name: str, tool_input: Dict, field: str) -> Optional[str]
         return tool_input.get("file_path", "")
     elif field == "content":
         return tool_input.get("content", "")
+    elif field == "tool_name":
+        # For MCP tools, match against the tool name itself
+        return tool_name
+    elif field == "issue_key":
+        # For Jira tools, extract the issue key
+        return tool_input.get("issue_key", "")
+    elif field == "page_id":
+        # For Confluence tools, extract the page id
+        return tool_input.get("page_id", "")
     return None
+
+
+def tool_matches(pattern_tool: str, actual_tool: str) -> bool:
+    """Check if a tool name matches the pattern's tool specification."""
+    if pattern_tool == "*":
+        return True
+    if pattern_tool == actual_tool:
+        return True
+    # Handle wildcard patterns like "mcp__*"
+    if pattern_tool.endswith("*"):
+        prefix = pattern_tool[:-1]
+        return actual_tool.startswith(prefix)
+    return False
 
 
 def match_patterns(
@@ -417,7 +470,7 @@ def match_patterns(
 
     for pattern in patterns:
         # Check tool type matches
-        if pattern.tool != "*" and pattern.tool != tool_name:
+        if not tool_matches(pattern.tool, tool_name):
             continue
 
         # Extract field to match

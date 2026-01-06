@@ -36,14 +36,20 @@ def get_session_id() -> str:
 
 def parse_tool_data(data: dict) -> dict:
     """Extract relevant fields from Claude Code tool call data."""
+    # Claude Code PostToolUse hook sends: tool_name, tool_input, tool_response
+    tool_response = data.get("tool_response", {})
+
+    # Determine if there was an error
+    error = tool_response.get("stderr") if tool_response.get("stderr") else None
+
     return {
-        "tool_name": data.get("tool_name", data.get("name", "unknown")),
-        "tool_input": data.get("tool_input", data.get("input", {})),
-        "tool_output": data.get("tool_output", data.get("output", "")),
-        "tool_result": data.get("tool_result", data.get("result", {})),
-        "duration_ms": data.get("duration_ms", 0),
-        "success": data.get("success", True),
-        "error": data.get("error"),
+        "tool_name": data.get("tool_name", "unknown"),
+        "tool_input": data.get("tool_input", {}),
+        "tool_response": tool_response,
+        "session_id": data.get("session_id"),
+        "tool_use_id": data.get("tool_use_id"),
+        "success": not bool(error),
+        "error": error,
     }
 
 
@@ -64,24 +70,27 @@ def send_trace(tool_data: dict) -> None:
         )
 
         parsed = parse_tool_data(tool_data)
-        session_id = get_session_id()
-        output = parsed["tool_output"] or parsed["tool_result"]
+        # Use session_id from Claude Code or generate one
+        session_id = parsed.get("session_id") or get_session_id()
 
-        # Create an event for the tool call
-        langfuse.create_event(
+        # Create a span for the tool call (creates visible trace)
+        # Note: session_id is included in metadata since start_span doesn't support it directly
+        span = langfuse.start_span(
             name=f"tool:{parsed['tool_name']}",
-            session_id=session_id,
             input=parsed["tool_input"],
-            output=output,
+            output=parsed["tool_response"],
             level="ERROR" if parsed["error"] else "DEFAULT",
             status_message=str(parsed["error"]) if parsed["error"] else None,
             metadata={
                 "source": "claude-code",
                 "plugin": "reflex",
                 "tool_name": parsed["tool_name"],
+                "tool_use_id": parsed.get("tool_use_id"),
+                "session_id": session_id,
                 "success": parsed["success"],
             },
         )
+        span.end()
 
         # Flush to ensure data is sent
         langfuse.flush()

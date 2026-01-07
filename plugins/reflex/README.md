@@ -107,20 +107,22 @@ Docker compose files are stored at `~/.claude/docker/`:
 
 Pre-configured in `.mcp.json`:
 
-| Server | Purpose |
-|--------|---------|
-| atlassian | Jira/Confluence |
-| git | Local git operations |
-| github | GitHub API |
-| microsoft-docs | MS Learn documentation |
-| azure | Azure resources |
-| azure-devops | Azure DevOps |
-| markitdown | Document conversion |
-| sql-server | SQL queries |
-| playwright | Browser testing |
-| azure-ai-foundry | Azure AI |
-| m365-agents | Microsoft 365 |
-| qdrant | Qdrant vector storage |
+| Server | Package | Purpose |
+|--------|---------|---------|
+| qdrant | `mcp-server-qdrant` | Vector database storage |
+| atlassian | `mcp-atlassian` | Jira/Confluence |
+| git | `mcp-server-git` | Local git operations |
+| github | `@modelcontextprotocol/server-github` | GitHub API |
+| microsoft-docs | `mcp-remote` (MS Learn) | MS Learn documentation |
+| azure | `@azure/mcp` | Azure resource management |
+| azure-devops | `@azure-devops/mcp` | Azure DevOps |
+| markitdown | `markitdown-mcp` | Document conversion |
+| sql-server | `mssql-mcp` | SQL Server queries |
+| playwright | `@playwright/mcp` | Browser automation |
+| devbox | `@microsoft/devbox-mcp` | Microsoft Dev Box |
+| azure-ai-foundry | `mcp-remote` (Azure AI) | Azure AI Foundry |
+
+Configure credentials with `/reflex:init <service>`. See `/reflex:init status` for current state.
 
 ## Project Structure
 

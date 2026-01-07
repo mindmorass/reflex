@@ -27,9 +27,9 @@
     },
     "github": {
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/github-mcp-server@latest"],
+      "args": ["-y", "@modelcontextprotocol/server-github"],
       "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
       }
     },
     "microsoft-docs": {
@@ -38,7 +38,7 @@
     },
     "azure": {
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/azure-mcp-server@latest"],
+      "args": ["-y", "@azure/mcp@latest", "server", "start"],
       "env": {
         "AZURE_SUBSCRIPTION_ID": "${AZURE_SUBSCRIPTION_ID}",
         "AZURE_TENANT_ID": "${AZURE_TENANT_ID}",
@@ -48,19 +48,19 @@
     },
     "azure-devops": {
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/azure-devops-mcp-server@latest"],
+      "args": ["-y", "@azure-devops/mcp@latest"],
       "env": {
-        "AZURE_DEVOPS_ORG": "${AZURE_DEVOPS_ORG}",
+        "AZURE_DEVOPS_ORG_URL": "https://dev.azure.com/${AZURE_DEVOPS_ORG}",
         "AZURE_DEVOPS_PAT": "${AZURE_DEVOPS_PAT}"
       }
     },
     "markitdown": {
       "command": "uvx",
-      "args": ["markitdown-mcp"]
+      "args": ["--python", "3.12", "markitdown-mcp"]
     },
     "sql-server": {
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/mssql-mcp-server@latest"],
+      "args": ["-y", "mssql-mcp@latest"],
       "env": {
         "MSSQL_CONNECTION_STRING": "${MSSQL_CONNECTION_STRING}"
       }
@@ -72,7 +72,7 @@
     },
     "devbox": {
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/devbox-mcp-server@latest"],
+      "args": ["-y", "@microsoft/devbox-mcp@latest"],
       "env": {
         "AZURE_SUBSCRIPTION_ID": "${AZURE_SUBSCRIPTION_ID}",
         "AZURE_TENANT_ID": "${AZURE_TENANT_ID}"
@@ -83,14 +83,6 @@
       "args": ["-y", "mcp-remote", "https://mcp.ai.azure.com"],
       "env": {
         "AZURE_TENANT_ID": "${AZURE_TENANT_ID}"
-      }
-    },
-    "m365-agents": {
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/m365-mcp-server@latest"],
-      "env": {
-        "AZURE_TENANT_ID": "${AZURE_TENANT_ID}",
-        "AZURE_CLIENT_ID": "${AZURE_CLIENT_ID}"
       }
     }
   }

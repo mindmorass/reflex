@@ -40,7 +40,7 @@ Create a new project and copy the API keys.
 ### 3. Configure Client
 
 ```bash
-export LANGFUSE_HOST="http://localhost:3000"
+export LANGFUSE_BASE_URL="http://localhost:3000"
 export LANGFUSE_PUBLIC_KEY="pk-..."
 export LANGFUSE_SECRET_KEY="sk-..."
 ```

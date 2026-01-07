@@ -6,7 +6,7 @@ Receives tool call data from stdin (JSON) and sends it to LangFuse.
 Designed to be called from langfuse-hook.sh as a PostToolUse hook.
 
 Environment variables:
-  LANGFUSE_HOST        - LangFuse server URL (default: http://localhost:3000)
+  LANGFUSE_BASE_URL    - LangFuse server URL (default: http://localhost:3000)
   LANGFUSE_PUBLIC_KEY  - LangFuse public key (required)
   LANGFUSE_SECRET_KEY  - LangFuse secret key (required)
   LANGFUSE_SESSION_ID  - Optional session ID for grouping traces
@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 
 # Check for langfuse package
 try:
-    from langfuse import Langfuse
+    from langfuse import get_client, propagate_attributes
 except ImportError:
     # Silently exit if langfuse not installed
     sys.exit(0)
@@ -53,51 +53,80 @@ def parse_tool_data(data: dict) -> dict:
     }
 
 
+def debug_log(msg: str) -> None:
+    """Write debug message to log file."""
+    log_path = os.path.join(
+        os.environ.get("CLAUDE_CONFIG_DIR", os.path.expanduser("~/.claude")),
+        "reflex", "langfuse-debug.log"
+    )
+    with open(log_path, "a") as f:
+        f.write(f"[PYTHON] {msg}\n")
+
+
 def send_trace(tool_data: dict) -> None:
-    """Send tool call trace to LangFuse."""
-    host = os.environ.get("LANGFUSE_HOST", "http://localhost:3000")
+    """Send tool call trace to LangFuse using SDK v3 API."""
+    host = os.environ.get("LANGFUSE_BASE_URL", "http://localhost:3000")
     public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
     secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
 
+    debug_log(f"host={host}")
+    debug_log(f"public_key={'<set>' if public_key else '<not set>'}")
+    debug_log(f"secret_key={'<set>' if secret_key else '<not set>'}")
+
     if not public_key or not secret_key:
+        debug_log("Missing credentials, returning")
         return
 
     try:
-        langfuse = Langfuse(
-            host=host,
-            public_key=public_key,
-            secret_key=secret_key,
-        )
+        # Set environment variables for get_client() to use
+        os.environ["LANGFUSE_HOST"] = host
+
+        debug_log("Getting Langfuse client...")
+        langfuse = get_client()
+        debug_log("Langfuse client obtained")
 
         parsed = parse_tool_data(tool_data)
         # Use session_id from Claude Code or generate one
         session_id = parsed.get("session_id") or get_session_id()
 
-        # Create a span for the tool call (creates visible trace)
-        # Note: session_id is included in metadata since start_span doesn't support it directly
-        span = langfuse.start_span(
-            name=f"tool:{parsed['tool_name']}",
-            input=parsed["tool_input"],
-            output=parsed["tool_response"],
-            level="ERROR" if parsed["error"] else "DEFAULT",
-            status_message=str(parsed["error"]) if parsed["error"] else None,
-            metadata={
-                "source": "claude-code",
-                "plugin": "reflex",
-                "tool_name": parsed["tool_name"],
-                "tool_use_id": parsed.get("tool_use_id"),
-                "session_id": session_id,
-                "success": parsed["success"],
-            },
-        )
-        span.end()
+        # SDK v3 uses start_as_current_observation with context manager
+        # Use propagate_attributes for session_id and user_id
+        user_id = os.environ.get("LANGFUSE_USER_ID", os.environ.get("HOME", "unknown"))
+        debug_log(f"Creating span for tool:{parsed['tool_name']}")
+        debug_log(f"user_id={user_id}")
+
+        with propagate_attributes(session_id=session_id, user_id=user_id):
+            with langfuse.start_as_current_observation(
+                as_type="span",
+                name=f"tool:{parsed['tool_name']}",
+                input=parsed["tool_input"],
+                metadata={
+                    "source": "claude-code",
+                    "plugin": "reflex",
+                    "tool_name": parsed["tool_name"],
+                    "tool_use_id": parsed.get("tool_use_id"),
+                    "success": parsed["success"],
+                },
+            ) as span:
+                # Update with output
+                span.update(output=parsed["tool_response"])
+
+                # Add error level if there was an error
+                if parsed["error"]:
+                    span.update(level="ERROR", status_message=str(parsed["error"]))
+
+        debug_log(f"Span created: tool:{parsed['tool_name']}")
 
         # Flush to ensure data is sent
+        debug_log("Flushing...")
         langfuse.flush()
+        debug_log("Flush complete")
 
-    except Exception:
-        # Silently fail - don't interrupt Claude Code
-        pass
+    except Exception as e:
+        # Log error for debugging
+        debug_log(f"ERROR: {type(e).__name__}: {e}")
+        import traceback
+        debug_log(f"Traceback: {traceback.format_exc()}")
 
 
 def main():

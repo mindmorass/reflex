@@ -100,7 +100,7 @@ Reflex includes optional LangFuse integration for tracing tool calls and agent i
 
 **Required environment variables:**
 ```bash
-export LANGFUSE_HOST="http://localhost:3000"  # Optional, defaults to localhost
+export LANGFUSE_BASE_URL="http://localhost:3000"  # Optional, defaults to localhost
 export LANGFUSE_PUBLIC_KEY="pk-..."
 export LANGFUSE_SECRET_KEY="sk-..."
 ```

@@ -27,7 +27,7 @@ touch "$CLAUDE_DIR/reflex/langfuse-enabled"
 echo "LangFuse integration enabled."
 echo ""
 echo "Ensure these environment variables are set:"
-echo "  LANGFUSE_HOST (default: http://localhost:3000)"
+echo "  LANGFUSE_BASE_URL (default: http://localhost:3000)"
 echo "  LANGFUSE_PUBLIC_KEY"
 echo "  LANGFUSE_SECRET_KEY"
 ```
@@ -51,7 +51,7 @@ else
 fi
 echo ""
 echo "**Configuration:**"
-echo "- Host: ${LANGFUSE_HOST:-http://localhost:3000}"
+echo "- Host: ${LANGFUSE_BASE_URL:-http://localhost:3000}"
 echo "- Public Key: ${LANGFUSE_PUBLIC_KEY:-<not set>}"
 echo "- Secret Key: ${LANGFUSE_SECRET_KEY:+<set>}${LANGFUSE_SECRET_KEY:-<not set>}"
 ```

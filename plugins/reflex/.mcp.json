@@ -55,8 +55,8 @@
       }
     },
     "markitdown": {
-      "command": "uvx",
-      "args": ["--python", "3.12", "markitdown-mcp"]
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "http://127.0.0.1:3001/mcp/"]
     },
     "sql-server": {
       "command": "npx",
@@ -83,6 +83,13 @@
       "args": ["-y", "mcp-remote", "https://mcp.ai.azure.com"],
       "env": {
         "AZURE_TENANT_ID": "${AZURE_TENANT_ID}"
+      }
+    },
+    "kubernetes": {
+      "command": "npx",
+      "args": ["-y", "kubernetes-mcp-server@latest", "--disable-destructive"],
+      "env": {
+        "KUBECONFIG": "${KUBECONFIG:-~/.kube/config}"
       }
     }
   }

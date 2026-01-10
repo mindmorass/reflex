@@ -1,60 +1,67 @@
 ---
-description: Control Qdrant vector database Docker service
-allowed-tools: Bash(docker compose:*), Bash(docker ps:*), Bash(curl:*)
-argument-hint: <start|stop|status|logs>
+description: Control Qdrant vector database connection (on/off)
+allowed-tools: Bash(touch:*), Bash(rm:*), Bash(cat:*), Bash(curl:*), Bash(echo:*)
+argument-hint: <on|off|status>
 ---
 
-# Qdrant Docker Service
+# Qdrant Connection Control
 
-Start, stop, or check status of the Qdrant vector database container.
+Enable or disable the Qdrant vector database connection. This assumes you have Qdrant running and accessible (self-managed, Docker, or hosted).
 
 ## Instructions
 
-The docker-compose file is located at `~/.claude/docker/qdrant/`.
-
 ### Arguments
 
-- `start` - Start the Qdrant container
-- `stop` - Stop the Qdrant container
-- `status` - Show container status and health
-- `logs` - Show recent container logs
+- `on` - Enable Qdrant connection
+- `off` - Disable Qdrant connection
+- `status` - Show connection status and health
 
-### start
+### on
 
 ```bash
-cd "$HOME/.claude/docker/qdrant" && docker compose up -d
+touch "$HOME/.claude/reflex/qdrant-enabled"
+echo "Qdrant connection enabled."
 echo ""
-echo "Qdrant started on:"
-echo "  REST API: http://localhost:6333"
-echo "  Dashboard: http://localhost:6333/dashboard"
-echo "  gRPC: localhost:6334"
+echo "**Checking connectivity...**"
+QDRANT_URL="${QDRANT_URL:-http://localhost:6333}"
+if curl -s "${QDRANT_URL}/readyz" >/dev/null 2>&1; then
+    echo "✓ Qdrant is reachable at ${QDRANT_URL}"
+else
+    echo "⚠ Qdrant is not responding at ${QDRANT_URL}"
+    echo "  Set QDRANT_URL environment variable if using a different endpoint."
+fi
 ```
 
-### stop
+### off
 
 ```bash
-cd "$HOME/.claude/docker/qdrant" && docker compose down
-echo "Qdrant stopped."
+rm -f "$HOME/.claude/reflex/qdrant-enabled"
+echo "Qdrant connection disabled."
 ```
 
 ### status
 
 ```bash
-echo "**Container Status:**"
-docker ps --filter "name=qdrant" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "Not running"
+QDRANT_URL="${QDRANT_URL:-http://localhost:6333}"
+echo "**Connection Status:**"
+if [ -f "$HOME/.claude/reflex/qdrant-enabled" ]; then
+    echo "  Enabled: yes"
+else
+    echo "  Enabled: no"
+fi
+echo "  Endpoint: ${QDRANT_URL}"
 echo ""
 echo "**Health Check:**"
-if curl -s http://localhost:6333/readyz >/dev/null 2>&1; then
-    echo "Qdrant is healthy and ready"
+if curl -s "${QDRANT_URL}/readyz" >/dev/null 2>&1; then
+    echo "  ✓ Qdrant is healthy and ready"
+    # Get collections count
+    COLLECTIONS=$(curl -s "${QDRANT_URL}/collections" 2>/dev/null | grep -o '"count":[0-9]*' | cut -d: -f2)
+    if [ -n "$COLLECTIONS" ]; then
+        echo "  Collections: ${COLLECTIONS}"
+    fi
 else
-    echo "Qdrant is not responding"
+    echo "  ✗ Qdrant is not responding"
 fi
-```
-
-### logs
-
-```bash
-cd "$HOME/.claude/docker/qdrant" && docker compose logs --tail=50
 ```
 
 ### No argument or invalid
@@ -62,19 +69,20 @@ cd "$HOME/.claude/docker/qdrant" && docker compose logs --tail=50
 If no argument or invalid argument provided, show usage:
 
 ```
-Usage: /reflex:qdrant <start|stop|status|logs>
+Usage: /reflex:qdrant <on|off|status>
 
-Control Qdrant vector database Docker service.
+Control Qdrant vector database connection.
 
 Commands:
-  start   Start the Qdrant container
-  stop    Stop the Qdrant container
-  status  Show container status and health
-  logs    Show recent container logs
+  on      Enable Qdrant connection
+  off     Disable Qdrant connection
+  status  Show connection status and health
 
-Ports:
-  6333    REST API + Dashboard
-  6334    gRPC
+Configuration:
+  Set QDRANT_URL environment variable to specify endpoint.
+  Default: http://localhost:6333
 
-Dashboard: http://localhost:6333/dashboard
+Example:
+  export QDRANT_URL="http://localhost:6333"
+  export QDRANT_URL="https://my-cluster.qdrant.io"
 ```

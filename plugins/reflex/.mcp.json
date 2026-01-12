@@ -91,6 +91,15 @@
       "env": {
         "KUBECONFIG": "${KUBECONFIG:-~/.kube/config}"
       }
+    },
+    "google-workspace": {
+      "command": "uvx",
+      "args": ["--python", "3.12", "workspace-mcp==1.7.1", "--tool-tier", "core"],
+      "env": {
+        "GOOGLE_OAUTH_CLIENT_ID": "${GOOGLE_OAUTH_CLIENT_ID}",
+        "GOOGLE_OAUTH_CLIENT_SECRET": "${GOOGLE_OAUTH_CLIENT_SECRET}",
+        "USER_GOOGLE_EMAIL": "${USER_GOOGLE_EMAIL}"
+      }
     }
   }
 }

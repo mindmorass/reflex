@@ -28,11 +28,11 @@ MCP_JSON="${CLAUDE_PLUGIN_ROOT}/plugins/reflex/.mcp.json"
 
 # npm packages
 echo "**npm packages:**"
-for pkg in $(cat "$MCP_JSON" | jq -r '.mcpServers | to_entries[] | select(.value.command == "npx") | .value.args[] | select(contains("@") and (startswith("-") | not) and (startswith("http") | not))' | head -20); do
-  # Extract package name and current version
-  if [[ "$pkg" =~ ^(@[^@]+/[^@]+)@(.+)$ ]] || [[ "$pkg" =~ ^([^@]+)@(.+)$ ]]; then
-    name="${BASH_REMATCH[1]}"
-    current="${BASH_REMATCH[2]}"
+for pkg in $(cat "$MCP_JSON" | jq -r '.mcpServers | to_entries[] | select(.value.command == "npx") | .value.args[] | select(contains("@") and (startswith("-") | not) and (startswith("http") | not))' | sort -u); do
+  # Extract package name (everything before last @) and version (after last @)
+  name=$(echo "$pkg" | sed 's/@[^@]*$//')
+  current=$(echo "$pkg" | grep -oE '[^@]+$')
+  if [ -n "$name" ] && [ -n "$current" ]; then
     # Get latest from npm
     latest=$(npm view "$name" version 2>/dev/null)
     if [ -n "$latest" ]; then
@@ -101,9 +101,15 @@ echo ""
 
 # Clear uvx cache
 echo "Clearing uvx cache..."
-if command -v uvx &>/dev/null; then
-  uv cache clean 2>/dev/null
-  echo "  ✓ uv cache cleared"
+if command -v uv &>/dev/null; then
+  uv cache clean --force 2>/dev/null &
+  UVPID=$!
+  sleep 2
+  if kill -0 $UVPID 2>/dev/null; then
+    echo "  ⏳ uv cache clean running in background (PID: $UVPID)"
+  else
+    echo "  ✓ uv cache cleared"
+  fi
 else
   echo "  ⚠ uv/uvx not found"
 fi

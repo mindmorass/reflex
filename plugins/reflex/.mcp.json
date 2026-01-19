@@ -26,10 +26,16 @@
       "env": {}
     },
     "github": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-github@2025.4.8"],
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "-e", "GITHUB_TOOLSETS",
+        "ghcr.io/github/github-mcp-server"
+      ],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}",
+        "GITHUB_TOOLSETS": "repos,issues,pull_requests,code_security"
       }
     },
     "microsoft-docs": {

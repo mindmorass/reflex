@@ -7,9 +7,9 @@ Reflex is a Claude Code plugin providing skills and RAG integration for applicat
 ```
 plugins/reflex/
 ├── .claude-plugin/plugin.json   # Plugin manifest
-├── agents/                      # 1 agent (rag-proxy)
+├── agents/                      # 2 agents
 ├── commands/                    # Slash commands
-├── skills/                      # 38 skill definitions
+├── skills/                      # 40 skill definitions
 ├── hooks/                       # Session hooks
 ├── scripts/                     # Helper scripts
 ├── .mcp.json                    # MCP server configurations
@@ -25,13 +25,21 @@ plugins/reflex/
 | `/reflex:mcp` | List MCP servers |
 | `/reflex:gitconfig` | Display git configuration |
 | `/reflex:certcollect` | Collect SSL certificates |
+| `/reflex:notify` | macOS popup notifications (on/off/status/test) |
+| `/reflex:speak` | Spoken notifications (on/off/status/test) |
+| `/reflex:qdrant` | Control Qdrant MCP connection (on/off/status) |
 | `/reflex:langfuse` | Control LangFuse observability (on/off/status) |
+| `/reflex:guardrail` | Control destructive operation guardrails (on/off/status) |
+| `/reflex:ingest` | Ingest files into Qdrant |
+| `/reflex:update-mcp` | Check/apply MCP package updates |
+| `/reflex:init` | Initialize MCP server credentials |
 
 ## Agents
 
 | Agent | Purpose |
 |-------|---------|
 | rag-proxy | RAG wrapper for any agent, enriches with Qdrant context |
+| workflow-orchestrator | Orchestrates multi-step workflows across specialized subagents |
 
 Most agent functionality is provided by official plugins (testing-suite, security-pro, documentation-generator, developer-essentials) and Reflex skills.
 

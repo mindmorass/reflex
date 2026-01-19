@@ -14,7 +14,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - Initial Release
+## [1.1.0] - 2025-01-18
+
+### Added
+
+- `workflow-orchestrator` agent for multi-step workflow coordination
+- 4 new skills: `iconset-maker`, `n8n-patterns`, `image-to-diagram`, `web-research`
+- 6 new commands: `notify`, `speak`, `guardrail`, `ingest`, `update-mcp`, `init`
+- 2 new MCP servers: `kubernetes`, `google-workspace`
+
+### Changed
+
+- Switched GitHub MCP to official Docker image (`ghcr.io/github/github-mcp-server`)
+- Switched markitdown to native npx package (`markitdown-mcp-npx`)
+- Qdrant command now controls MCP connection (on/off) instead of Docker
+
+### Fixed
+
+- Documentation now reflects accurate counts (40 skills, 13 commands, 2 agents, 14 MCP servers)
+
+## [1.0.0] - Initial Release
 
 ### Features
 

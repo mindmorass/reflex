@@ -34,15 +34,16 @@ Reflex works best with these plugins (checked on session start):
 
 ## Features
 
-### RAG Integration
+### Agents
 
 | Agent | Purpose |
 |-------|---------|
 | `rag-proxy` | RAG wrapper for any agent, enriches with Qdrant context |
+| `workflow-orchestrator` | Orchestrates multi-step workflows across specialized subagents |
 
 Use `/reflex:task "your task" --rag` to enrich tasks with stored knowledge before delegating to official plugin agents.
 
-### 36 Skills
+### 40 Skills
 
 Skills provide reusable knowledge patterns. Run `/reflex:skills` to list all.
 
@@ -68,9 +69,12 @@ Key skills include:
 | `/reflex:certcollect <hostname>` | Collect SSL certificates |
 | `/reflex:notify <on\|off\|status\|test>` | macOS popup notifications |
 | `/reflex:speak <on\|off\|status\|test>` | Spoken notifications via `say` |
-| `/reflex:qdrant <start\|stop\|status\|logs>` | Control Qdrant Docker service |
+| `/reflex:qdrant <on\|off\|status>` | Control Qdrant MCP connection |
 | `/reflex:langfuse <on\|off\|status>` | Enable/disable LangFuse tracing |
-| `/reflex:langfuse-docker <start\|stop\|status\|logs>` | Control LangFuse Docker service |
+| `/reflex:guardrail <on\|off\|status>` | Control destructive operation guardrails |
+| `/reflex:ingest <path>` | Ingest files into Qdrant |
+| `/reflex:update-mcp <check\|apply>` | Check/apply MCP package updates |
+| `/reflex:init <service>` | Initialize MCP server credentials |
 
 ### Notifications
 
@@ -112,15 +116,17 @@ Pre-configured in `.mcp.json`:
 | qdrant | `mcp-server-qdrant` | Vector database storage |
 | atlassian | `mcp-atlassian` | Jira/Confluence |
 | git | `mcp-server-git` | Local git operations |
-| github | `@modelcontextprotocol/server-github` | GitHub API |
+| github | `ghcr.io/github/github-mcp-server` | GitHub API |
 | microsoft-docs | `mcp-remote` (MS Learn) | MS Learn documentation |
 | azure | `@azure/mcp` | Azure resource management |
 | azure-devops | `@azure-devops/mcp` | Azure DevOps |
-| markitdown | `markitdown-mcp` | Document conversion |
+| markitdown | `markitdown-mcp-npx` | Document conversion |
 | sql-server | `mssql-mcp` | SQL Server queries |
 | playwright | `@playwright/mcp` | Browser automation |
 | devbox | `@microsoft/devbox-mcp` | Microsoft Dev Box |
 | azure-ai-foundry | `mcp-remote` (Azure AI) | Azure AI Foundry |
+| kubernetes | `kubernetes-mcp-server` | Kubernetes cluster management |
+| google-workspace | `workspace-mcp` | Gmail, Calendar, Drive, Docs |
 
 Configure credentials with `/reflex:init <service>`. See `/reflex:init status` for current state.
 
@@ -130,9 +136,9 @@ Configure credentials with `/reflex:init <service>`. See `/reflex:init status` f
 plugins/reflex/
 ├── .claude-plugin/
 │   └── plugin.json      # Plugin manifest
-├── agents/              # 1 agent (rag-proxy)
+├── agents/              # 2 agents
 ├── commands/            # Slash commands
-├── skills/              # 36 skill definitions
+├── skills/              # 40 skill definitions
 ├── hooks/               # Session hooks
 ├── scripts/             # Helper scripts
 ├── .mcp.json            # MCP server configurations

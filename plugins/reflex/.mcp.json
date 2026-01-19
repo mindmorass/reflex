@@ -61,8 +61,8 @@
       }
     },
     "markitdown": {
-      "command": "npx",
-      "args": ["-y", "markitdown-mcp-npx"]
+      "command": "uvx",
+      "args": ["markitdown-mcp"]
     },
     "sql-server": {
       "command": "npx",

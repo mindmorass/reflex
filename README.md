@@ -1,5 +1,7 @@
 # Reflex Plugin Marketplace
 
+[![Release](https://img.shields.io/github/v/release/mindmorass/reflex)](https://github.com/mindmorass/reflex/releases)
+
 A Claude Code plugin for application development, infrastructure, and data engineering workflows.
 
 ## Installation

@@ -62,7 +62,7 @@
     },
     "markitdown": {
       "command": "npx",
-      "args": ["-y", "mcp-remote@0.1.37", "http://127.0.0.1:3001/mcp/"]
+      "args": ["-y", "markitdown-mcp-npx"]
     },
     "sql-server": {
       "command": "npx",

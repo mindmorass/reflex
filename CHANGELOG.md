@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1](https://github.com/mindmorass/reflex/compare/v1.1.0...v1.1.1) (2026-02-04)
+
+
+### Bug Fixes
+
+* Remove unused C_WHITE variable from statusline ([a57d803](https://github.com/mindmorass/reflex/commit/a57d8034a7b6311aa648c9fa2e10fb66d4965a92))
+* Respect CLAUDE_CONFIG_DIR across all commands and docs ([690fa1b](https://github.com/mindmorass/reflex/commit/690fa1bcab65b3607b8e6634015c30ae4f807887))
+* Use gray for status line time display ([68bee29](https://github.com/mindmorass/reflex/commit/68bee2918a1ec6375af77c72e76e96549f47bef8))
+
 ## [1.1.0](https://github.com/mindmorass/reflex/compare/v1.0.0...v1.1.0) (2026-02-04)
 
 

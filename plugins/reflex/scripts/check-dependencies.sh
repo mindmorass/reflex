@@ -86,6 +86,20 @@ if ! check_plugin "superpowers" "obra/superpowers-marketplace"; then
 fi
 
 # =============================================================================
+# Plugin Version Check (marketplace users)
+# =============================================================================
+# Compare installed version against latest on GitHub to notify users of updates.
+INSTALLED_VERSION=$(jq -r '.version // empty' "${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json" 2>/dev/null || true)
+LATEST_VERSION=$(curl -sf --max-time 3 \
+  "https://raw.githubusercontent.com/mindmorass/reflex/main/plugins/reflex/.claude-plugin/plugin.json" \
+  | jq -r '.version // empty' 2>/dev/null) || LATEST_VERSION=""
+
+UPDATE_AVAILABLE=""
+if [[ -n "$LATEST_VERSION" && -n "$INSTALLED_VERSION" && "$INSTALLED_VERSION" != "$LATEST_VERSION" ]]; then
+  UPDATE_AVAILABLE="yes"
+fi
+
+# =============================================================================
 # Guardrail Default Setup (enabled by default for safety)
 # =============================================================================
 GUARDRAIL_STATE="${CLAUDE_DIR}/reflex/guardrail-enabled"
@@ -118,6 +132,12 @@ fi
 if [[ "$GUARDRAIL_ENABLED" == "new" ]]; then
   CONTEXT="${CONTEXT}\nGuardrails enabled: Destructive operations will be blocked or require confirmation."
   CONTEXT="${CONTEXT}\nManage with: /reflex:guardrail <on|off|status|patterns>\n"
+fi
+
+# Add update notification
+if [[ "$UPDATE_AVAILABLE" == "yes" ]]; then
+  CONTEXT="${CONTEXT}\nReflex update available: ${INSTALLED_VERSION} → ${LATEST_VERSION}"
+  CONTEXT="${CONTEXT}\nRun: claude plugin update reflex@mindmorass-reflex\n"
 fi
 
 # Add missing plugins warning

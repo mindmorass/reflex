@@ -16,7 +16,7 @@ A Claude Code plugin for application development, infrastructure, and data engin
 | Component | Count | Description |
 |-----------|-------|-------------|
 | Skills | 40 | Development patterns, RAG, harvesting, infrastructure |
-| Commands | 14 | `/reflex:agents`, `/reflex:skills`, `/reflex:handoff`, etc. |
+| Commands | 15 | `/reflex:agents`, `/reflex:skills`, `/reflex:handoff`, etc. |
 | Agents | 2 | `rag-proxy`, `workflow-orchestrator` |
 
 ## Docker Services

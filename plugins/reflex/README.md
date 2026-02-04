@@ -76,6 +76,7 @@ Key skills include:
 | `/reflex:update-mcp <check\|apply>` | Check/apply MCP package updates |
 | `/reflex:init <service>` | Initialize MCP server credentials |
 | `/reflex:handoff [path]` | Generate handoff document for session continuation |
+| `/reflex:statusline <on\|off\|status\|color>` | Configure the Reflex status line |
 
 ### Notifications
 

@@ -105,6 +105,7 @@ plugins/reflex/
 | `/reflex:update-mcp` | Check/apply MCP package updates |
 | `/reflex:init` | Initialize MCP server credentials |
 | `/reflex:handoff` | Generate handoff document for session continuation |
+| `/reflex:statusline` | Configure the Reflex status line (on/off/status/color) |
 
 ## Agents
 

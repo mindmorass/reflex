@@ -1,6 +1,6 @@
 ---
 description: Generate a handoff document for session continuation
-allowed-tools: Write, Read, Glob, Grep
+allowed-tools: Write, Read, Bash(find:*), Bash(grep:*)
 argument-hint: [path]
 ---
 

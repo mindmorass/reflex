@@ -9,6 +9,7 @@ CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-${HOME}/.claude}"
 STATE_FILE="${CLAUDE_DIR}/reflex/langfuse-enabled"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEBUG_LOG="${CLAUDE_DIR}/reflex/langfuse-debug.log"
+mkdir -p "$(dirname "$DEBUG_LOG")" 2>/dev/null || true
 
 # Debug function
 debug() {

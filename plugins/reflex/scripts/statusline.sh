@@ -1,15 +1,26 @@
 #!/bin/bash
 # Reflex Status Line for Claude Code
-# Based on ykdojo/claude-code-tips (Tip 0)
-# Shows: Model | Directory | Git branch (uncommitted, sync) | Context usage bar
+# Mimics Starship prompt configuration from ~/.config/starship.toml
 
-# Color theme: gray, orange, blue, teal, green, lavender, rose, gold, slate, cyan
-COLOR="${REFLEX_STATUSLINE_COLOR:-blue}"
+# Color theme: starship (Gruvbox Dark palette)
+COLOR="${REFLEX_STATUSLINE_COLOR:-starship}"
 
-# Color codes
+# Gruvbox Dark color palette (from starship.toml)
 C_RESET='\033[0m'
+C_ORANGE='\033[38;5;208m'      # color_orange: #ff6f00
+C_YELLOW='\033[38;5;221m'      # color_yellow: #FFDE59
+C_SHARP_BLUE='\033[38;5;33m'   # color_sharp_blue: #008cff
+C_PURPLE='\033[38;5;141m'      # color_purple: #9959FF
+C_RED='\033[38;5;203m'         # color_red: #F15B5B
+C_AQUA='\033[38;5;72m'         # color_aqua: #689d6a
+C_BLUE='\033[38;5;66m'         # color_blue: #458588
+C_BG1='\033[38;5;237m'         # color_bg1: #3c3836
+C_BG3='\033[38;5;241m'         # color_bg3: #665c54
+C_FG0='\033[38;5;230m'         # color_fg0: #fbf1c7
 C_GRAY='\033[38;5;245m'
 C_BAR_EMPTY='\033[38;5;238m'
+
+# Legacy color support
 case "$COLOR" in
     orange)   C_ACCENT='\033[38;5;173m' ;;
     blue)     C_ACCENT='\033[38;5;74m' ;;
@@ -20,6 +31,7 @@ case "$COLOR" in
     gold)     C_ACCENT='\033[38;5;136m' ;;
     slate)    C_ACCENT='\033[38;5;60m' ;;
     cyan)     C_ACCENT='\033[38;5;37m' ;;
+    starship) C_ACCENT="$C_AQUA" ;;
     *)        C_ACCENT="$C_GRAY" ;;
 esac
 
@@ -30,65 +42,60 @@ model=$(echo "$input" | jq -r '.model.display_name // .model.id // "?"')
 cwd=$(echo "$input" | jq -r '.cwd // empty')
 dir=$(basename "$cwd" 2>/dev/null || echo "?")
 
-# Get git branch, uncommitted file count, and sync status
+# Get workspace profile (like Starship custom.workspace)
+workspace="${WORKSPACE_PROFILE:-$(whoami)}"
+
+# Get OS symbol (like Starship os module)
+os_symbol="󰀵"  # macOS default from starship.toml
+
+# Get git branch and status (like Starship git_branch and git_status)
 branch=""
-git_status=""
+git_status_indicators=""
 if [[ -n "$cwd" && -d "$cwd" ]]; then
     branch=$(git -C "$cwd" branch --show-current 2>/dev/null)
     if [[ -n "$branch" ]]; then
+        # Count uncommitted files
         file_count=$(git -C "$cwd" --no-optional-locks status --porcelain -uall 2>/dev/null | wc -l | tr -d ' ')
 
-        sync_status=""
+        # Get ahead/behind status
         upstream=$(git -C "$cwd" rev-parse --abbrev-ref @{upstream} 2>/dev/null)
         if [[ -n "$upstream" ]]; then
-            fetch_head="$cwd/.git/FETCH_HEAD"
-            fetch_ago=""
-            if [[ -f "$fetch_head" ]]; then
-                fetch_time=$(stat -f %m "$fetch_head" 2>/dev/null || stat -c %Y "$fetch_head" 2>/dev/null)
-                if [[ -n "$fetch_time" ]]; then
-                    now=$(date +%s)
-                    diff=$((now - fetch_time))
-                    if [[ $diff -lt 60 ]]; then
-                        fetch_ago="<1m ago"
-                    elif [[ $diff -lt 3600 ]]; then
-                        fetch_ago="$((diff / 60))m ago"
-                    elif [[ $diff -lt 86400 ]]; then
-                        fetch_ago="$((diff / 3600))h ago"
-                    else
-                        fetch_ago="$((diff / 86400))d ago"
-                    fi
-                fi
-            fi
-
             counts=$(git -C "$cwd" rev-list --left-right --count HEAD...@{upstream} 2>/dev/null)
             ahead=$(echo "$counts" | cut -f1)
             behind=$(echo "$counts" | cut -f2)
-            if [[ "$ahead" -eq 0 && "$behind" -eq 0 ]]; then
-                if [[ -n "$fetch_ago" ]]; then
-                    sync_status="synced ${fetch_ago}"
-                else
-                    sync_status="synced"
-                fi
-            elif [[ "$ahead" -gt 0 && "$behind" -eq 0 ]]; then
-                sync_status="${ahead} ahead"
-            elif [[ "$ahead" -eq 0 && "$behind" -gt 0 ]]; then
-                sync_status="${behind} behind"
-            else
-                sync_status="${ahead} ahead, ${behind} behind"
-            fi
-        else
-            sync_status="no upstream"
-        fi
 
-        if [[ "$file_count" -eq 0 ]]; then
-            git_status="(clean, ${sync_status})"
-        elif [[ "$file_count" -eq 1 ]]; then
-            single_file=$(git -C "$cwd" --no-optional-locks status --porcelain -uall 2>/dev/null | head -1 | sed 's/^...//')
-            git_status="(${single_file} uncommitted, ${sync_status})"
+            # Build status indicators
+            [[ "${file_count:-0}" -gt 0 ]] && git_status_indicators+="*${file_count}"
+            [[ "${ahead:-0}" -gt 0 ]] && git_status_indicators+="↑${ahead}"
+            [[ "${behind:-0}" -gt 0 ]] && git_status_indicators+="↓${behind}"
         else
-            git_status="(${file_count} uncommitted, ${sync_status})"
+            [[ "$file_count" -gt 0 ]] && git_status_indicators+="*${file_count}"
         fi
     fi
+fi
+
+# Check for Kubernetes context (when kubeon is set, like Starship)
+k8s_info=""
+if [[ -n "$kubeon" ]] && command -v kubectl &>/dev/null; then
+    k8s_ctx=$(kubectl config current-context 2>/dev/null)
+    k8s_ns=$(kubectl config view --minify --output 'jsonpath={..namespace}' 2>/dev/null)
+    [[ -z "$k8s_ns" ]] && k8s_ns="default"
+    k8s_info="${k8s_ctx} [${k8s_ns}]"
+fi
+
+# Check for GCloud context (when gcpon is set, like Starship)
+gcp_info=""
+if [[ -n "$gcpon" ]] && command -v gcloud &>/dev/null; then
+    gcp_account=$(gcloud config get-value account 2>/dev/null)
+    gcp_project=$(gcloud config get-value project 2>/dev/null)
+    [[ -n "$gcp_account" && -n "$gcp_project" ]] && gcp_info="${gcp_account}@${gcp_project}"
+fi
+
+# Check for Terraform workspace (like Starship terraform module)
+tf_info=""
+if [[ -n "$cwd" && -f "$cwd/.terraform/environment" ]]; then
+    tf_workspace=$(cat "$cwd/.terraform/environment" 2>/dev/null)
+    [[ -n "$tf_workspace" ]] && tf_info="[${tf_workspace}]"
 fi
 
 # Get transcript path for context calculation
@@ -141,10 +148,40 @@ done
 
 ctx="${bar} ${C_GRAY}${pct_prefix}${pct}% of ${max_k}k tokens"
 
-# Build output
-output="${C_ACCENT}${model}${C_GRAY} | 📁${dir}"
-[[ -n "$branch" ]] && output+=" | 🔀${branch} ${git_status}"
-output+=" | ${ctx}${C_RESET}"
+# Build output (mimicking Starship format with colored segments)
+output=""
+
+# OS + Workspace (orange background in Starship)
+output+="${C_ORANGE}${os_symbol} ${workspace}${C_RESET}"
+
+# Directory (yellow background in Starship)
+output+=" ${C_YELLOW}📁 ${dir}${C_RESET}"
+
+# Kubernetes (sharp blue background in Starship, only if kubeon)
+[[ -n "$k8s_info" ]] && output+=" ${C_SHARP_BLUE}☸ ${k8s_info}${C_RESET}"
+
+# Terraform (purple background in Starship, only if .terraform exists)
+[[ -n "$tf_info" ]] && output+=" ${C_PURPLE}󱁢 ${tf_info}${C_RESET}"
+
+# GCloud (red background in Starship, only if gcpon)
+[[ -n "$gcp_info" ]] && output+=" ${C_RED} ${gcp_info}${C_RESET}"
+
+# Git (aqua background in Starship)
+if [[ -n "$branch" ]]; then
+    output+=" ${C_AQUA} ${branch}"
+    [[ -n "$git_status_indicators" ]] && output+=" ${git_status_indicators}"
+    output+="${C_RESET}"
+fi
+
+# Model (using blue like language versions in Starship)
+output+=" ${C_BLUE}${model}${C_RESET}"
+
+# Time (gray background in Starship)
+current_time=$(date +%H:%M:%S)
+output+=" ${C_BG1}⏱ ${current_time}${C_RESET}"
+
+# Context usage bar
+output+=" ${ctx}${C_RESET}"
 
 printf '%b\n' "$output"
 

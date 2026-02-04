@@ -24,7 +24,7 @@ Check npm and PyPI for newer versions of pinned packages:
 echo "Checking MCP package versions..."
 echo ""
 
-MCP_JSON="${CLAUDE_PLUGIN_ROOT}/plugins/reflex/.mcp.json"
+MCP_JSON="${CLAUDE_PLUGIN_ROOT}/.mcp.json"
 
 # npm packages
 echo "**npm packages:**"

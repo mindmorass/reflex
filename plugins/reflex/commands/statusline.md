@@ -19,9 +19,9 @@ Handle the argument provided:
    plugins/reflex/scripts/statusline.sh
    ```
    Find the absolute path by checking common locations:
-   - Check if `~/.claude/plugins/reflex@mindmorass-reflex/plugins/reflex/scripts/statusline.sh` exists (marketplace install)
+   - Check if `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/plugins/reflex@mindmorass-reflex/plugins/reflex/scripts/statusline.sh` exists (marketplace install)
    - Check if the script exists relative to this command's location
-   - As a fallback, search for it with: `find ~/.claude -name "statusline.sh" -path "*/reflex/scripts/*" 2>/dev/null | head -1`
+   - As a fallback, search for it with: `find "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" -name "statusline.sh" -path "*/reflex/scripts/*" 2>/dev/null | head -1`
 
 2. Verify the script exists and is executable. If not executable, run `chmod +x` on it.
 

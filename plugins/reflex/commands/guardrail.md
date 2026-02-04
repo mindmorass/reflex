@@ -149,7 +149,7 @@ Severity Levels:
   MEDIUM   - Requires user confirmation
 
 Custom Configuration:
-  Create ~/.claude/reflex/guardrail-config.json to:
+  Create ${CLAUDE_CONFIG_DIR:-$HOME/.claude}/reflex/guardrail-config.json to:
   - Disable specific patterns: {"disabled_patterns": ["pattern_name"]}
   - Override severity: {"severity_overrides": {"pattern": "medium"}}
   - Add custom patterns: {"additional_patterns": [...]}

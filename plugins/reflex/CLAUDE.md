@@ -57,6 +57,7 @@ Reflex is a Claude Code plugin providing skills and RAG integration for applicat
 - **Simplicity First**: Make every change as simple as possible. Impact minimal code.
 - **No Lateness**: Find root causes. No temporary fixes. Senior developer standards.
 - **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
+- **Respect CLAUDE_CONFIG_DIR**: NEVER hardcode `~/.claude` or `$HOME/.claude`. Always use `${CLAUDE_CONFIG_DIR:-$HOME/.claude}` to resolve the Claude config directory. This applies to all bash commands, scripts, and file path references. Users may have a custom config directory set and hardcoded paths will break their setup.
 
 ## Context Management
 

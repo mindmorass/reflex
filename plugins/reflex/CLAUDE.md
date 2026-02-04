@@ -107,6 +107,7 @@ plugins/reflex/
 | `/reflex:init` | Initialize MCP server credentials |
 | `/reflex:handoff` | Generate handoff document for session continuation |
 | `/reflex:statusline` | Configure the Reflex status line (on/off/status/color) |
+| `/reflex:summarize-meeting` | Summarize meeting transcript to structured notes |
 
 ## Agents
 

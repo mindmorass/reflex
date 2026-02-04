@@ -1,0 +1,203 @@
+---
+name: meeting-summarizer
+description: Summarize meeting transcripts into structured notes with decisions, action items, and key topics.
+---
+
+# Meeting Summarizer Skill
+
+## Purpose
+
+Convert meeting transcripts into structured, actionable summaries. Supports multiple transcript formats and LLM backends.
+
+## When to Use
+
+- After a meeting recording has been transcribed
+- Processing VTT/SRT captions from video calls
+- Summarizing pasted meeting notes
+- Extracting action items and decisions from long discussions
+
+## Summary Template
+
+The summarizer produces this structured output:
+
+```markdown
+# Meeting Summary: <title>
+
+**Date:** <YYYY-MM-DD>
+**Attendees:** <comma-separated names>
+**Duration:** <if detectable from timestamps>
+
+## Executive Summary
+
+<2-4 sentence overview of the meeting's purpose and outcomes>
+
+## Key Topics
+
+1. **<Topic>** - <1-sentence description>
+2. **<Topic>** - <1-sentence description>
+   (3-7 topics)
+
+## Decisions Made
+
+- **<Decision>**: <reasoning or context>
+- **<Decision>**: <reasoning or context>
+
+## Action Items
+
+| Action | Owner | Deadline |
+|--------|-------|----------|
+| <task> | <person> | <date or TBD> |
+
+## Open Questions
+
+- <Question or unresolved item>
+- <Question or unresolved item>
+```
+
+## Extraction Cues
+
+### Decisions
+Look for phrases indicating agreement or resolution:
+- "let's go with", "we decided", "agreed", "the plan is"
+- "we'll use", "going forward", "the approach will be"
+- Unanimous or majority agreement markers
+
+### Action Items
+Look for commitment language:
+- "I'll do", "I will", "I can take that"
+- "can you", "please handle", "your task is"
+- "@name" followed by a task
+- "by Friday", "next week", "before the release"
+
+### Open Questions
+Look for unresolved items:
+- "TBD", "to be determined", "parking lot"
+- "we need to figure out", "open question"
+- "let's revisit", "follow up on"
+- Questions without clear answers in the transcript
+
+### Attendees
+- Speaker labels (e.g., "John:", "Sarah Smith:")
+- "attendees:", "participants:", "present:"
+- Names mentioned in greetings ("hi John", "thanks Sarah")
+
+## Transcript Format Preprocessing
+
+### VTT (WebVTT)
+- Strip `WEBVTT` header and metadata lines
+- Remove timestamp lines (`00:00:00.000 --> 00:00:05.000`)
+- Remove position/alignment tags (`<c>`, `align:`, `position:`)
+- Deduplicate rolling captions (many VTT files repeat lines with slight timestamp shifts)
+- Merge consecutive lines from same speaker
+
+### SRT (SubRip)
+- Strip sequence numbers (standalone integers)
+- Remove timestamp lines (`00:00:00,000 --> 00:00:05,000`)
+- Remove blank separator lines
+- Merge consecutive same-speaker lines
+
+### Plain Text
+- Use as-is
+- Detect speaker labels: `Name:`, `[Name]`, `SPEAKER_01:`
+- Normalize speaker label formats for consistency
+
+### DOCX
+- Extract paragraph text via python-docx
+- Preserve heading structure
+- Strip formatting artifacts
+
+### Google Doc
+- Fetched via Google Workspace MCP as plain text
+- Treat same as plain text after retrieval
+
+## Long Transcript Strategy
+
+**Threshold:** 30,000 words
+
+### Single Pass (<30K words)
+Send entire cleaned transcript to LLM with the system prompt and template.
+
+### Two-Pass Chunked (>30K words)
+1. **Chunk**: Split at ~20,000 word boundaries, preferring natural breaks (speaker changes, topic shifts, timestamp gaps)
+2. **Extract**: Summarize each chunk independently, extracting topics, decisions, action items, and questions
+3. **Synthesize**: Combine chunk summaries into a single coherent summary, deduplicating items and merging topics
+
+## Qdrant Storage Schema
+
+Always store summaries in Qdrant for RAG retrieval. Follows CLAUDE.md web search storage conventions:
+
+```yaml
+source: "meeting_transcript"
+content_type: "meeting_summary"
+harvested_at: "<ISO 8601 timestamp>"
+
+# Meeting context
+meeting_title: "<title>"
+meeting_date: "<YYYY-MM-DD>"
+attendees: "<comma-separated names>"
+source_file: "<filename or gdoc:ID>"
+source_format: "<vtt|srt|txt|docx|gdoc|pasted>"
+
+# Extracted counts
+action_item_count: <integer>
+decision_count: <integer>
+topics: "<comma-separated key topics>"
+
+# Classification
+category: "business"
+type: "meeting_summary"
+confidence: "high"
+```
+
+## Destination-Specific Formatting
+
+### Local Markdown File
+Use the standard template as-is. Action items use markdown tables.
+
+### Obsidian Vault
+Add YAML frontmatter before the content:
+
+```yaml
+---
+title: "<meeting title>"
+date: <YYYY-MM-DD>
+tags: [meeting, summary]
+attendees:
+  - Name1
+  - Name2
+action_items: <count>
+decisions: <count>
+---
+```
+
+Place in `meetings/YYYY/MM/<title>.md` within the vault.
+
+### Google Docs
+- Replace markdown table for action items with bullet list format:
+  ```
+  - **<task>** (Owner: <person>, Deadline: <date>)
+  ```
+- Google Docs API renders markdown tables as plain text, so bullet lists are more readable.
+
+## LLM System Prompt
+
+The summarize.py script uses this system prompt:
+
+```
+You are a meeting transcript summarizer. Your job is to extract structured
+information from meeting transcripts.
+
+Given a transcript, produce a summary with these sections:
+- Executive Summary (2-4 sentences)
+- Key Topics (3-7 bullet points)
+- Decisions Made (with reasoning)
+- Action Items (action, owner, deadline as table rows)
+- Open Questions (unresolved items)
+
+Rules:
+- Only include information explicitly stated in the transcript
+- If attendees are not clear, note "Attendees not identified"
+- If no decisions were made, state "No explicit decisions recorded"
+- Mark deadlines as "TBD" when not specified
+- Keep the executive summary factual, not interpretive
+```

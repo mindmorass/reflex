@@ -14,7 +14,6 @@ C_PURPLE='\033[38;5;141m'      # color_purple: #9959FF
 C_RED='\033[38;5;203m'         # color_red: #F15B5B
 C_AQUA='\033[38;5;72m'         # color_aqua: #689d6a
 C_BLUE='\033[38;5;66m'         # color_blue: #458588
-C_WHITE='\033[38;5;255m'       # bright white for readability
 C_BG3='\033[38;5;241m'         # color_bg3: #665c54
 C_FG0='\033[38;5;230m'         # color_fg0: #fbf1c7
 C_GRAY='\033[38;5;245m'

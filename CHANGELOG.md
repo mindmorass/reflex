@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/mindmorass/reflex/compare/v1.0.0...v1.1.0) (2026-02-04)
+
+
+### Features
+
+* Add plugin update notification for marketplace users ([a10eb98](https://github.com/mindmorass/reflex/commit/a10eb9886e6fc56f8c8c37a16a52231ead17bc56))
+* Add workflow orchestration principles to CLAUDE.md ([5554396](https://github.com/mindmorass/reflex/commit/5554396346297a734ef33e0225d4515c04108e10))
+
+
+### Bug Fixes
+
+* Update statusline to Starship theme, fix plugin-relative paths ([d50841c](https://github.com/mindmorass/reflex/commit/d50841ce1c1211dcba7d6d5d0d06aa036cf5496d))
+
 ## 1.0.0 (2026-01-19)
 
 

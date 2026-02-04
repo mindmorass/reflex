@@ -75,6 +75,7 @@ Key skills include:
 | `/reflex:ingest <path>` | Ingest files into Qdrant |
 | `/reflex:update-mcp <check\|apply>` | Check/apply MCP package updates |
 | `/reflex:init <service>` | Initialize MCP server credentials |
+| `/reflex:handoff [path]` | Generate handoff document for session continuation |
 
 ### Notifications
 

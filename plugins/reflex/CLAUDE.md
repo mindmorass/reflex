@@ -15,6 +15,9 @@ Reflex is a Claude Code plugin providing skills and RAG integration for applicat
 - Offload research, exploration, and parallel analysis to subagents
 - For complex problems, throw more compute at it via subagents
 - One task per subagent for focused execution
+- Run independent subagents in parallel (multiple Task tool calls in one message)
+- Use `model: "haiku"` for quick, straightforward subtasks to minimize cost/latency
+- Use background subagents (`run_in_background: true`) for long-running tasks while continuing other work
 
 ### 3. Self-Improvement Loop
 - After ANY correction from the user, update `tasks/lessons.md` with the pattern
@@ -55,6 +58,21 @@ Reflex is a Claude Code plugin providing skills and RAG integration for applicat
 - **No Lateness**: Find root causes. No temporary fixes. Senior developer standards.
 - **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
 
+## Context Management
+
+- **Monitor context usage**: When context feels heavy (~85% through a long session), proactively suggest `/reflex:handoff` to generate a continuation document
+- **Handoff docs**: Use `/reflex:handoff` to create a structured summary for seamless session continuation
+- **Periodic CLAUDE.md review**: At the start of complex tasks, re-read project CLAUDE.md to ensure alignment with project conventions
+- **Offload to subagents**: Heavy exploration and research should happen in subagents to preserve main context for decision-making
+
+## Performance
+
+- **Enable tool search**: For faster startup with many MCP servers, users should enable lazy tool loading:
+  ```bash
+  claude config set --global toolSearchEnabled true
+  ```
+  This loads tool definitions on demand instead of all at once, reducing startup time when Reflex's MCP servers are active.
+
 ## Project Structure
 
 ```
@@ -86,6 +104,7 @@ plugins/reflex/
 | `/reflex:ingest` | Ingest files into Qdrant |
 | `/reflex:update-mcp` | Check/apply MCP package updates |
 | `/reflex:init` | Initialize MCP server credentials |
+| `/reflex:handoff` | Generate handoff document for session continuation |
 
 ## Agents
 

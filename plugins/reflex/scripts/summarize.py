@@ -20,6 +20,10 @@ Usage:
 
     # Custom model and output
     python summarize.py notes.txt --llm ollama --model mistral --output summary.md
+
+Environment variables (REFLEX_TRANSCRIPT_ prefix):
+    REFLEX_TRANSCRIPT_LLM     LLM provider (default: ollama)
+    REFLEX_TRANSCRIPT_MODEL   Model name override
 """
 
 import argparse
@@ -548,7 +552,7 @@ examples:
         "--llm",
         choices=["ollama", "openai", "anthropic"],
         default=None,
-        help="LLM provider (default: SUMMARIZE_LLM env or 'ollama')",
+        help="LLM provider (default: REFLEX_TRANSCRIPT_LLM env or 'ollama')",
     )
     parser.add_argument(
         "--model",
@@ -574,8 +578,8 @@ examples:
     args = parser.parse_args()
 
     # Resolve LLM provider: flag > env > default
-    llm_name = args.llm or os.environ.get("SUMMARIZE_LLM", "ollama")
-    model = args.model or os.environ.get("OLLAMA_MODEL") if llm_name == "ollama" else args.model
+    llm_name = args.llm or os.environ.get("REFLEX_TRANSCRIPT_LLM", "ollama")
+    model = args.model or os.environ.get("REFLEX_TRANSCRIPT_MODEL")
 
     # Resolve title
     title = args.title or Path(args.file).stem.replace("-", " ").replace("_", " ").title()

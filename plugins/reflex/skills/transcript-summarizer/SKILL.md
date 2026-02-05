@@ -3,11 +3,20 @@ name: transcript-summarizer
 description: Summarize meeting transcripts into structured notes with decisions, action items, and key topics.
 ---
 
-# Meeting Summarizer Skill
+# Transcript Summarizer Skill
 
 ## Purpose
 
 Convert meeting transcripts into structured, actionable summaries. Supports multiple transcript formats and LLM backends.
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REFLEX_TRANSCRIPT_SRC_DIR` | Default directory to look for transcript files | `.` |
+| `REFLEX_TRANSCRIPT_DST_DIR` | Root output directory for processed transcripts | `./meetings` |
+| `REFLEX_TRANSCRIPT_LLM` | LLM provider: `ollama`, `openai`, `anthropic` | `ollama` |
+| `REFLEX_TRANSCRIPT_MODEL` | Model name override | Provider default |
 
 ## When to Use
 
@@ -21,7 +30,7 @@ Convert meeting transcripts into structured, actionable summaries. Supports mult
 Each meeting produces a directory with three files:
 
 ```
-meetings/
+${REFLEX_TRANSCRIPT_DST_DIR:-./meetings}/
 └── <YYYY-MM-DD>/
     └── <HH-MM>/
         ├── original.txt    # Raw transcript (unmodified source)
@@ -205,36 +214,6 @@ category: "business"
 type: "meeting_summary"
 confidence: "high"
 ```
-
-## Destination-Specific Formatting
-
-### Local Markdown File
-Use the standard template as-is. Action items use markdown tables.
-
-### Obsidian Vault
-Add YAML frontmatter before the content:
-
-```yaml
----
-title: "<meeting title>"
-date: <YYYY-MM-DD>
-tags: [meeting, summary]
-attendees:
-  - Name1
-  - Name2
-action_items: <count>
-decisions: <count>
----
-```
-
-Place in `meetings/YYYY/MM/<title>.md` within the vault.
-
-### Google Docs
-- Replace markdown table for action items with bullet list format:
-  ```
-  - **<task>** (Owner: <person>, Deadline: <date>)
-  ```
-- Google Docs API renders markdown tables as plain text, so bullet lists are more readable.
 
 ## LLM System Prompt
 

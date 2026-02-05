@@ -14,6 +14,19 @@ Summarize a meeting transcript into structured notes with decisions, action item
 /reflex:summarize-transcript <source> [--to <directory>] [--llm <provider>] [--model <name>] [--title "Title"]
 ```
 
+## Environment Variables
+
+All environment variables use the `REFLEX_TRANSCRIPT_` prefix:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REFLEX_TRANSCRIPT_SRC_DIR` | Default directory to look for transcript files | `.` (current directory) |
+| `REFLEX_TRANSCRIPT_DST_DIR` | Root output directory for processed transcripts | `./meetings` |
+| `REFLEX_TRANSCRIPT_LLM` | LLM provider: `ollama`, `openai`, `anthropic` | `ollama` |
+| `REFLEX_TRANSCRIPT_MODEL` | Model name override | Provider default |
+
+Command-line arguments override environment variables.
+
 ## Instructions
 
 ### Step 1: Parse Arguments
@@ -23,19 +36,19 @@ Parse the user's input to extract:
 | Argument | Description | Default |
 |----------|-------------|---------|
 | `<source>` | Transcript source (required) | - |
-| `--to` | Root output directory | `./meetings` |
-| `--llm` | LLM provider: `ollama`, `openai`, `anthropic` | `ollama` |
-| `--model` | Model name override | Provider default |
+| `--to` | Root output directory | `${REFLEX_TRANSCRIPT_DST_DIR:-./meetings}` |
+| `--llm` | LLM provider: `ollama`, `openai`, `anthropic` | `${REFLEX_TRANSCRIPT_LLM:-ollama}` |
+| `--model` | Model name override | `${REFLEX_TRANSCRIPT_MODEL}` or provider default |
 | `--title` | Meeting title | Derived from filename |
 
 **Source types:**
-- **File path** (`.vtt`, `.srt`, `.txt`, `.docx`) -- use directly
+- **File path** (`.vtt`, `.srt`, `.txt`, `.docx`) -- use directly. If a relative path, resolve against `${REFLEX_TRANSCRIPT_SRC_DIR:-.}`
 - **`paste`** -- prompt user to paste transcript
 - **`gdoc:<ID>`** or Google Docs URL -- fetch via MCP
 
 **Destination:**
 - A directory path that serves as the root for the output structure
-- Default: `./meetings`
+- Default: `${REFLEX_TRANSCRIPT_DST_DIR:-./meetings}`
 - The tool creates `<destination>/<YYYY-MM-DD>/<HH-MM>/` under this root
 
 ### Step 2: Resolve Source
@@ -102,7 +115,7 @@ uvx --with python-docx python ${CLAUDE_PLUGIN_ROOT}/scripts/summarize.py <output
 - `anthropic`: add `--with anthropic` to uvx command
 
 **Pass through optional flags:**
-- `--model <name>` if specified
+- `--model <name>` if specified (falls back to `${REFLEX_TRANSCRIPT_MODEL}` if set)
 - `--title "Title"` if specified
 - `--date YYYY-MM-DD` if known
 
@@ -169,4 +182,20 @@ Summarize what was done:
 
 # Use Anthropic with a specific model
 /reflex:summarize-transcript notes.txt --llm anthropic --model claude-sonnet-4-20250514
+```
+
+## Environment Variable Examples
+
+```bash
+# Set defaults in your shell profile
+export REFLEX_TRANSCRIPT_SRC_DIR=~/Downloads
+export REFLEX_TRANSCRIPT_DST_DIR=~/Documents/meetings
+export REFLEX_TRANSCRIPT_LLM=openai
+export REFLEX_TRANSCRIPT_MODEL=gpt-4o
+
+# Now just point at the file — destination and LLM are pre-configured
+/reflex:summarize-transcript recording.vtt
+
+# Override a default for a single run
+/reflex:summarize-transcript recording.vtt --llm anthropic
 ```

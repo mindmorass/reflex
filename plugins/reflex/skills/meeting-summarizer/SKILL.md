@@ -124,8 +124,19 @@ Send entire cleaned transcript to LLM with the system prompt and template.
 
 ## Qdrant Storage Schema
 
-Always store summaries in Qdrant for RAG retrieval. Follows CLAUDE.md web search storage conventions:
+Always store summaries in Qdrant for RAG retrieval. The **full summary content** must be stored in the `information` field to enable semantic search across meeting contents.
 
+**Information Field (embedded content):**
+Store the complete generated summary markdown, including:
+- Executive summary
+- Key topics with descriptions
+- Decisions with reasoning
+- Action items (as formatted text)
+- Open questions
+
+This enables queries like "what did we decide about X?" or "who is responsible for Y?" to find relevant meetings.
+
+**Metadata Fields:**
 ```yaml
 source: "meeting_transcript"
 content_type: "meeting_summary"
@@ -138,7 +149,7 @@ attendees: "<comma-separated names>"
 source_file: "<filename or gdoc:ID>"
 source_format: "<vtt|srt|txt|docx|gdoc|pasted>"
 
-# Extracted counts
+# Extracted counts (for filtering)
 action_item_count: <integer>
 decision_count: <integer>
 topics: "<comma-separated key topics>"

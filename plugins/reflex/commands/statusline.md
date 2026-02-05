@@ -31,9 +31,19 @@ Handle the argument provided:
    ```
    If not found, inform the user: "The status line requires `jq`. Install it with: `brew install jq` (macOS) or `apt-get install jq` (Linux)"
 
-4. Configure Claude Code's status line by running:
+4. Configure Claude Code's status line by writing directly to the settings file:
    ```bash
-   claude config set --global statusLine '{"type": "command", "command": "<absolute-path-to-statusline.sh>"}'
+   SETTINGS_FILE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+   ```
+   - If the file exists, use `jq` to set the `statusLine` key
+   - If not, create it with the statusLine entry
+   ```bash
+   jq '.statusLine = {"type": "command", "command": "<absolute-path-to-statusline.sh>"}' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp" && mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
+   ```
+   If the file doesn't exist yet:
+   ```bash
+   mkdir -p "$(dirname "$SETTINGS_FILE")"
+   echo '{"statusLine": {"type": "command", "command": "<absolute-path-to-statusline.sh>"}}' > "$SETTINGS_FILE"
    ```
 
 5. Confirm: "Status line enabled. Restart Claude Code to see it. Customize color with: `export REFLEX_STATUSLINE_COLOR=<color>`"
@@ -44,7 +54,8 @@ Handle the argument provided:
 
 1. Remove the status line configuration:
    ```bash
-   claude config set --global statusLine ''
+   SETTINGS_FILE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+   jq 'del(.statusLine)' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp" && mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
    ```
 
 2. Confirm: "Status line disabled. Restart Claude Code to apply."
@@ -53,7 +64,8 @@ Handle the argument provided:
 
 1. Read the current status line configuration:
    ```bash
-   claude config get --global statusLine
+   SETTINGS_FILE="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+   jq '.statusLine // empty' "$SETTINGS_FILE" 2>/dev/null
    ```
 
 2. Report whether it's enabled, disabled, and what script path is configured.

@@ -19,7 +19,8 @@ Enable or disable the Qdrant vector database connection. This assumes you have Q
 ### on
 
 ```bash
-touch "$HOME/.claude/reflex/qdrant-enabled"
+mkdir -p "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/reflex"
+touch "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/reflex/qdrant-enabled"
 echo "Qdrant connection enabled."
 echo ""
 echo "**Checking connectivity...**"
@@ -35,7 +36,7 @@ fi
 ### off
 
 ```bash
-rm -f "$HOME/.claude/reflex/qdrant-enabled"
+rm -f "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/reflex/qdrant-enabled"
 echo "Qdrant connection disabled."
 ```
 
@@ -44,7 +45,7 @@ echo "Qdrant connection disabled."
 ```bash
 QDRANT_URL="${QDRANT_URL:-http://localhost:6333}"
 echo "**Connection Status:**"
-if [ -f "$HOME/.claude/reflex/qdrant-enabled" ]; then
+if [ -f "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/reflex/qdrant-enabled" ]; then
     echo "  Enabled: yes"
 else
     echo "  Enabled: no"

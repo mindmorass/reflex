@@ -4,7 +4,7 @@
       "command": "uvx",
       "args": ["--python", "3.12", "--with", "fastembed", "mcp-server-qdrant==0.8.1"],
       "env": {
-        "QDRANT_URL": "http://localhost:6333",
+        "QDRANT_URL": "${QDRANT_URL:-http://localhost:6333}",
         "COLLECTION_NAME": "${WORKSPACE_PROFILE:-default}_memories"
       }
     },

@@ -16,6 +16,51 @@ Convert meeting transcripts into structured, actionable summaries. Supports mult
 - Summarizing pasted meeting notes
 - Extracting action items and decisions from long discussions
 
+## Output Structure
+
+Each meeting produces a directory with three files:
+
+```
+meetings/
+└── <YYYY-MM-DD>/
+    └── <HH-MM>/
+        ├── original.txt    # Raw transcript (unmodified source)
+        ├── readable.md     # Cleaned, formatted transcript
+        └── summary.md      # Structured summary (stored in Qdrant)
+```
+
+### File Descriptions
+
+**original.txt**
+- Exact copy of the input transcript
+- Preserves VTT/SRT timestamps, formatting artifacts, etc.
+- Useful for debugging or re-processing with different settings
+
+**readable.md**
+- Cleaned transcript with preprocessing applied (see Transcript Format Preprocessing)
+- Speaker labels normalized
+- Timestamps and artifacts removed
+- Consecutive same-speaker lines merged
+- Human-readable format for reviewing what was actually said
+
+**summary.md**
+- Structured summary following the Summary Template
+- This is the file stored in Qdrant for RAG retrieval
+- Contains executive summary, decisions, action items, etc.
+
+### Directory Naming
+
+- Date: ISO format `YYYY-MM-DD` (e.g., `2024-01-15`)
+- Time: 24-hour format `HH-MM` (e.g., `14-30` for 2:30 PM)
+- If meeting time is unknown, use `00-00` or prompt user
+
+### Workflow
+
+1. **Copy** original transcript to `original.txt`
+2. **Clean** transcript using format-specific preprocessing → `readable.md`
+3. **Summarize** cleaned transcript → `summary.md`
+4. **Store** summary.md content in Qdrant with metadata pointing to directory
+
 ## Summary Template
 
 The summarizer produces this structured output:
@@ -145,8 +190,9 @@ harvested_at: "<ISO 8601 timestamp>"
 # Meeting context
 meeting_title: "<title>"
 meeting_date: "<YYYY-MM-DD>"
+meeting_time: "<HH-MM>"
 attendees: "<comma-separated names>"
-source_file: "<filename or gdoc:ID>"
+output_dir: "<path to YYYY-MM-DD/HH-MM directory>"
 source_format: "<vtt|srt|txt|docx|gdoc|pasted>"
 
 # Extracted counts (for filtering)

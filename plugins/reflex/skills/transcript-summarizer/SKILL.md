@@ -1,5 +1,5 @@
 ---
-name: meeting-summarizer
+name: transcript-summarizer
 description: Summarize meeting transcripts into structured notes with decisions, action items, and key topics.
 ---
 

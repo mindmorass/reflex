@@ -1,6 +1,6 @@
 {
   "name": "reflex",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Opinionated sub-agents and skills for application development, infrastructure, and data engineering workflows",
   "author": {
     "name": "mindmorass"

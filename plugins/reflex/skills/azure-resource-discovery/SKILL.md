@@ -23,7 +23,42 @@ Patterns for tracing Azure resource dependencies, mapping networking and securit
 - **Azure Resource Graph** extension: required for `az graph query`. Usually auto-installed on first use; if not, the user must run `az extension add --name resource-graph`
 - **Graphviz** (optional): `dot` command for rendering complex topologies. Install via `brew install graphviz` (macOS) or `apt install graphviz` (Linux). Falls back to Mermaid if not available.
 
-## Resource Graph Queries
+## Query Guidelines
+
+**IMPORTANT: Use the exact query templates below. Do NOT improvise Resource Graph KQL syntax.** Azure Resource Graph uses a subset of Kusto Query Language with restrictions that differ from full KQL. Improvised queries frequently produce `InvalidQuery` errors.
+
+When you need filtering beyond what the templates cover, prefer `az resource list` with JMESPath `--query` over crafting new Resource Graph queries:
+
+```bash
+# GOOD: Use az resource list with JMESPath for simple filtering
+az resource list --resource-group "<rg>" --query "[?type!='Microsoft.App/containerApps']" -o json
+
+# BAD: Do NOT improvise Resource Graph KQL operators
+# az graph query -q "resources | where type !in~ ('microsoft.app/containerapps')"  <-- will fail
+```
+
+### KQL Operators Reference (Resource Graph subset)
+
+Only use these operators in `az graph query` — other KQL operators may not be supported:
+
+| Operator | Example | Notes |
+|----------|---------|-------|
+| `=~` | `where name =~ 'myapp'` | Case-insensitive equals |
+| `==` | `where name == 'myApp'` | Case-sensitive equals |
+| `!=` | `where type != 'Microsoft.Web/sites'` | Case-sensitive not equals |
+| `!~` | `where type !~ 'microsoft.web/sites'` | Case-insensitive not equals |
+| `contains` | `where type contains 'network'` | Case-insensitive substring |
+| `!contains` | `where type !contains 'network'` | Case-insensitive not-contains |
+| `startswith` | `where name startswith 'prod'` | Case-insensitive prefix |
+| `and` / `or` | `where type =~ 'x' and resourceGroup =~ 'y'` | Logical operators |
+| `project` | `| project name, type, location` | Select columns |
+| `mv-expand` | `| mv-expand x = properties.arr` | Expand arrays |
+
+**Do NOT use:** `!in~`, `!has`, `has`, `in~` with inline lists, `matches regex`, or other advanced KQL operators — they are unreliable in Resource Graph.
+
+## Resource Graph Query Templates
+
+Use these exact templates. Replace only the placeholder values in angle brackets.
 
 ### Find Resource by Name
 
@@ -47,6 +82,13 @@ az graph query -q "resources | where type =~ 'microsoft.network/privateendpoints
 
 ```bash
 az graph query -q "resources | where type =~ 'microsoft.network/networksecuritygroups' and resourceGroup =~ '<resource-group>'" --first 20 -o json
+```
+
+### Find Resources in a Resource Group (excluding a type)
+
+```bash
+# Use az resource list with JMESPath — more reliable than Resource Graph for exclusion filters
+az resource list --resource-group "<rg>" --query "[?type!='<type-to-exclude>']" -o json
 ```
 
 ### Find Managed Identity Role Assignments

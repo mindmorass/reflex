@@ -41,7 +41,13 @@ Parse the user's input to extract:
 - `--output` — custom output file name (default: `<resource-name>-topology.md`)
 - `--store` — whether to store in Qdrant after generating
 
-Resolve the output directory: `${REFLEX_AZURE_DISCOVER_OUTPUT_DIR:-$HOME/Desktop}`. Combine with `--output` file name to get the full output path.
+Resolve the output directory by running:
+
+```bash
+echo "${REFLEX_AZURE_DISCOVER_OUTPUT_DIR:-$HOME/Desktop}"
+```
+
+Use the result as the output directory. Combine it with the `--output` file name to get the full output path.
 
 ### Step 2: Verify Prerequisites
 
@@ -63,6 +69,8 @@ Handle results:
 - **Zero results**: Report that no resource was found. Suggest checking the name or subscription scope.
 - **One result**: Use it as the target. Extract `id`, `name`, `type`, `resourceGroup`, `location`, `subscriptionId`.
 - **Multiple results**: Use `AskUserQuestion` to let the user pick which resource. Show name, type, resource group, and subscription for each.
+
+**IMPORTANT: Use the exact query templates from the azure-resource-discovery skill. Do NOT improvise Resource Graph KQL syntax — it frequently produces InvalidQuery errors. When you need filtering beyond the templates, use `az resource list` with JMESPath `--query` instead.**
 
 ### Step 4: Run Type-Specific Dependency Tracer
 
@@ -124,7 +132,7 @@ Assemble the report using the **Markdown Report Template** from the **azure-reso
 8. **Quick Reference** — subscription, resource group, region, total dependencies
 9. **Trace Notes** — errors, skipped checks, permission issues
 
-Write the report to `${REFLEX_AZURE_DISCOVER_OUTPUT_DIR:-$HOME/Desktop}/<output-file-name>`.
+Write the report to the output directory resolved in Step 1, combined with the output file name.
 
 ### Step 9: Store in Qdrant (Optional) and Report Results
 

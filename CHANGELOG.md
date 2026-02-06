@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/mindmorass/reflex/compare/v1.1.1...v1.2.0) (2026-02-06)
+
+
+### Features
+
+* Add Azure resource discovery command and skill ([22cff23](https://github.com/mindmorass/reflex/commit/22cff2328ab4c007b1522b20950d221674babc2c))
+* Add meeting transcript summarizer ([f87e74d](https://github.com/mindmorass/reflex/commit/f87e74d59a2da8024b18237aa662cae5fb1e3f15))
+* Add REFLEX_TRANSCRIPT_ environment variables ([9ff454c](https://github.com/mindmorass/reflex/commit/9ff454c52ec8a877a92d68fdab895cf1fc3fee22))
+* Add structured output directory for meeting transcripts ([71675ad](https://github.com/mindmorass/reflex/commit/71675adcfa84428dacd32074c5b1e02564c88a9e))
+* Rename meeting-summarizer skill to transcript-summarizer ([fc9a784](https://github.com/mindmorass/reflex/commit/fc9a78410ae5729d1f00c891faf8f963ccf11fe6))
+* Rename summarize-meeting to summarize-transcript ([3e60499](https://github.com/mindmorass/reflex/commit/3e604992918efb5b50e20cfbc9da38b220b1f0e2))
+
+
+### Bug Fixes
+
+* Allow QDRANT_URL override via environment variable ([7e3e0d6](https://github.com/mindmorass/reflex/commit/7e3e0d61918393feb07d5bf227f05156945be3d7))
+* Respect CLAUDE_CONFIG_DIR in statusline and qdrant commands ([26d7474](https://github.com/mindmorass/reflex/commit/26d7474f40a85570f958a64d7952b94324385dae))
+* Store full meeting summary content in Qdrant for RAG ([d155e6b](https://github.com/mindmorass/reflex/commit/d155e6b1a13da38d2d038c1f9bcc42feea437a60))
+* Update summarize.py to use REFLEX_TRANSCRIPT_ env vars ([5098694](https://github.com/mindmorass/reflex/commit/50986946bef75de24d20c31d69d07e6c7b5dbc27))
+* Update transcript-summarizer skill with env vars and cleanup ([4d786b2](https://github.com/mindmorass/reflex/commit/4d786b242cfbb131d80ef38bea791f8c172ead46))
+
 ## [1.1.1](https://github.com/mindmorass/reflex/compare/v1.1.0...v1.1.1) (2026-02-04)
 
 

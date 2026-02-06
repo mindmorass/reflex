@@ -64,7 +64,7 @@ Key skills include:
 |---------|-------------|
 | `/reflex:agents` | List available agents |
 | `/reflex:skills` | List available skills |
-| `/reflex:mcp` | List MCP servers |
+| `/reflex:mcp` | Manage MCP servers (list/install/uninstall/enable/disable/select) |
 | `/reflex:gitconfig` | Display git configuration |
 | `/reflex:certcollect <hostname>` | Collect SSL certificates |
 | `/reflex:notify <on\|off\|status\|test>` | macOS popup notifications |

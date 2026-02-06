@@ -1,7 +1,8 @@
 #!/bin/bash
 # Guardrail hook for Reflex - blocks or prompts for destructive operations
 # Called by Claude Code PreToolUse hook
-# Exit 0 = allow, Exit 2 = block (with deny/ask in output)
+# Exit 0 + JSON on stdout = decision (allow/deny/ask)
+# Non-zero exit = error (fail open)
 
 set -euo pipefail
 
@@ -18,17 +19,15 @@ fi
 TOOL_DATA=$(cat)
 
 # Call Python script for pattern matching
-# Uses Python 3 from the environment (no external dependencies beyond stdlib)
-RESULT=$(python3 "$SCRIPT_DIR/guardrail.py" <<< "$TOOL_DATA" 2>&1) || {
-    EXIT_CODE=$?
-    if [ $EXIT_CODE -eq 2 ]; then
-        # Python script returned block decision
-        echo "$RESULT" >&2
-        exit 2
-    fi
-    # Other errors - fail open (allow) to avoid blocking legitimate operations
+# Python outputs decision JSON to stdout, exits 0 for decisions, non-zero for errors
+RESULT=$(python3 "$SCRIPT_DIR/guardrail.py" <<< "$TOOL_DATA") || {
+    # Python error - fail open (allow) to avoid blocking legitimate operations
     exit 0
 }
 
-# Python returned allow decision
+# Pass through Python's stdout (decision JSON or empty for allow)
+if [ -n "$RESULT" ]; then
+    echo "$RESULT"
+fi
+
 exit 0

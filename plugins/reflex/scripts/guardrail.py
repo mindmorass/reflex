@@ -3,12 +3,11 @@
 Guardrail pattern matcher for Claude Code PreToolUse hook.
 
 Receives tool call data from stdin (JSON) and evaluates against
-destructive operation patterns. Returns decision via exit code
-and stderr output.
+destructive operation patterns. Returns decision via stdout JSON.
 
 Exit codes:
-  0 = Allow operation
-  2 = Block operation (output JSON with deny/ask decision)
+  0 = Decision made (check stdout JSON for permissionDecision)
+  Non-zero = Error (caller should fail open)
 """
 
 import json
@@ -114,6 +113,15 @@ DEFAULT_PATTERNS: List[Dict] = [
         "field": "command"
     },
     {
+        "name": "drop_table",
+        "severity": "critical",
+        "category": "database_destructive",
+        "pattern": r"DROP\s+TABLE\s+",
+        "description": "Table drop operation (destroys table and all data)",
+        "tool": "Bash",
+        "field": "command"
+    },
+    {
         "name": "truncate_table",
         "severity": "critical",
         "category": "database_destructive",
@@ -186,6 +194,24 @@ DEFAULT_PATTERNS: List[Dict] = [
         "category": "git_destructive",
         "pattern": r"git\s+rebase\s+.*origin/",
         "description": "Git rebase on remote branch (rewrites history)",
+        "tool": "Bash",
+        "field": "command"
+    },
+    {
+        "name": "git_branch_force_delete",
+        "severity": "high",
+        "category": "git_destructive",
+        "pattern": r"git\s+branch\s+(-D|--delete\s+--force)\s+",
+        "description": "Git force-delete local branch (may lose unmerged commits)",
+        "tool": "Bash",
+        "field": "command"
+    },
+    {
+        "name": "az_account_set",
+        "severity": "high",
+        "category": "cloud_destructive",
+        "pattern": r"az\s+account\s+set\s+",
+        "description": "Azure CLI subscription switch (mutates global CLI state)",
         "tool": "Bash",
         "field": "command"
     },
@@ -590,12 +616,14 @@ def main():
         decision, match = determine_decision(matches)
 
         # Output and exit
+        # Claude Code expects: exit 0 + JSON on stdout for all decisions.
+        # Non-zero exit is treated as a hook error, not a parseable decision.
         if decision == Decision.ALLOW:
             sys.exit(0)
         else:
             output = format_output(decision, match)
-            print(output, file=sys.stderr)
-            sys.exit(2)
+            print(output)
+            sys.exit(0)
 
     except json.JSONDecodeError:
         # Invalid JSON - allow (fail open)

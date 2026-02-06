@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0](https://github.com/mindmorass/reflex/compare/v1.4.1...v1.5.0) (2026-02-06)
+
+
+### Features
+
+* Redesign azure-discover as resource-centric dependency tracer ([b6d7904](https://github.com/mindmorass/reflex/commit/b6d79048a7e6e68355c2f9745d150997663207e6))
+
+
+### Bug Fixes
+
+* Guardrail hook output protocol and add missing patterns ([892e339](https://github.com/mindmorass/reflex/commit/892e3396f5b8effa59c4e2a3cb6777047752e2a9))
+
 ## [1.4.1](https://github.com/mindmorass/reflex/compare/v1.4.0...v1.4.1) (2026-02-06)
 
 

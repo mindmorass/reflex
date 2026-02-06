@@ -590,12 +590,47 @@ def format_output(decision: Decision, match: Optional[Match]) -> str:
     return json.dumps(output)
 
 
+def list_patterns():
+    """Print all active patterns grouped by severity."""
+    patterns = load_patterns()
+
+    groups: Dict[Severity, List[Pattern]] = {}
+    for p in patterns:
+        groups.setdefault(p.severity, []).append(p)
+
+    severity_labels = {
+        Severity.CRITICAL: "CRITICAL (Blocked Entirely)",
+        Severity.HIGH: "HIGH (Require Confirmation)",
+        Severity.MEDIUM: "MEDIUM (Require Confirmation)",
+        Severity.LOW: "LOW (Warning Only)",
+    }
+
+    print("## Active Guardrail Patterns")
+    print()
+
+    for severity in [Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM, Severity.LOW]:
+        items = groups.get(severity, [])
+        if not items:
+            continue
+        print(f"### {severity_labels[severity]}")
+        print("| Pattern | Category | Description |")
+        print("|---------|----------|-------------|")
+        for p in items:
+            print(f"| {p.name} | {p.category} | {p.description} |")
+        print()
+
+
 # =============================================================================
 # Main
 # =============================================================================
 
 def main():
     """Main entry point."""
+    # Handle --list-patterns flag (no stdin needed, bypasses pattern matching)
+    if len(sys.argv) > 1 and sys.argv[1] == "--list-patterns":
+        list_patterns()
+        sys.exit(0)
+
     try:
         # Read tool data from stdin
         raw_input = sys.stdin.read().strip()

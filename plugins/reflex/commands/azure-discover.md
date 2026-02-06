@@ -22,8 +22,14 @@ Trace all dependencies of a specific Azure resource — networking, security, id
 |----------|----------|---------|-------------|
 | `<resource-name>` | Yes | — | Name of the Azure resource to trace |
 | `--subscription` | No | (current default) | Subscription name or ID to narrow search |
-| `--output` | No | `<resource-name>-topology.md` | Output file path for the report |
+| `--output` | No | `<resource-name>-topology.md` | Output file name for the report |
 | `--store` | No | `false` | Store the report in Qdrant for RAG queries |
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REFLEX_AZURE_DISCOVER_OUTPUT_DIR` | `$HOME/Desktop` | Directory where topology reports are written |
 
 ## Instructions
 
@@ -32,8 +38,10 @@ Trace all dependencies of a specific Azure resource — networking, security, id
 Parse the user's input to extract:
 - First positional argument: `<resource-name>` (required — if missing, ask the user)
 - `--subscription` — narrows search scope
-- `--output` — custom output file path (default: `<resource-name>-topology.md`)
+- `--output` — custom output file name (default: `<resource-name>-topology.md`)
 - `--store` — whether to store in Qdrant after generating
+
+Resolve the output directory: `${REFLEX_AZURE_DISCOVER_OUTPUT_DIR:-$HOME/Desktop}`. Combine with `--output` file name to get the full output path.
 
 ### Step 2: Verify Prerequisites
 
@@ -116,7 +124,7 @@ Assemble the report using the **Markdown Report Template** from the **azure-reso
 8. **Quick Reference** — subscription, resource group, region, total dependencies
 9. **Trace Notes** — errors, skipped checks, permission issues
 
-Write the report to the output file path.
+Write the report to `${REFLEX_AZURE_DISCOVER_OUTPUT_DIR:-$HOME/Desktop}/<output-file-name>`.
 
 ### Step 9: Store in Qdrant (Optional) and Report Results
 
@@ -158,7 +166,7 @@ Summarize what was done:
 # Trace with specific subscription
 /reflex:azure-discover my-aks-cluster --subscription "Production"
 
-# Custom output file
+# Custom output file name (written to $REFLEX_AZURE_DISCOVER_OUTPUT_DIR or ~/Desktop)
 /reflex:azure-discover my-webapp --output webapp-deps.md
 
 # Trace and store in Qdrant

@@ -66,6 +66,21 @@ Reflex is a Claude Code plugin providing skills and RAG integration for applicat
 - **Periodic CLAUDE.md review**: At the start of complex tasks, re-read project CLAUDE.md to ensure alignment with project conventions
 - **Offload to subagents**: Heavy exploration and research should happen in subagents to preserve main context for decision-making
 
+## MCP Server Management
+
+MCP servers are managed separately from the plugin. The plugin provides a **catalog** of available servers; users install and enable the ones they need.
+
+- **Catalog**: `plugins/reflex/mcp-catalog.json` — registry of all available servers
+- **User config**: `${CLAUDE_CONFIG_DIR}/reflex/mcp-config.json` — tracks installed/enabled state
+- **Generated config**: `${WORKSPACE_HOME:-$HOME}/.mcp.json` — runtime artifact Claude Code reads
+- **Tool names**: `mcp__<server>__<tool>` (e.g., `mcp__atlassian__jira_search`)
+
+Key commands:
+- `/reflex:mcp select` — interactive selection to install/uninstall servers
+- `/reflex:mcp enable` — interactive selection to enable/disable installed servers
+- `/reflex:mcp install <server>` / `uninstall` / `enable` / `disable` — non-interactive management
+- `/reflex:mcp status` — show credential readiness per server
+
 ## Performance
 
 - **Enable tool search**: For faster startup with many MCP servers, users should enable lazy tool loading:
@@ -81,10 +96,10 @@ plugins/reflex/
 ├── .claude-plugin/plugin.json   # Plugin manifest
 ├── agents/                      # 2 agents
 ├── commands/                    # Slash commands
-├── skills/                      # 40 skill definitions
+├── skills/                      # 42 skill definitions
 ├── hooks/                       # Session hooks
-├── scripts/                     # Helper scripts
-├── .mcp.json                    # MCP server configurations
+├── scripts/                     # Helper scripts (mcp-generate.sh)
+├── mcp-catalog.json             # MCP server catalog (registry)
 └── CLAUDE.md                    # These instructions
 ```
 
@@ -94,7 +109,7 @@ plugins/reflex/
 |---------|-------------|
 | `/reflex:agents` | List available agents |
 | `/reflex:skills` | List available skills |
-| `/reflex:mcp` | List MCP servers |
+| `/reflex:mcp` | Manage MCP servers (list/install/uninstall/enable/disable/select) |
 | `/reflex:gitconfig` | Display git configuration |
 | `/reflex:certcollect` | Collect SSL certificates |
 | `/reflex:notify` | macOS popup notifications (on/off/status/test) |
@@ -104,7 +119,7 @@ plugins/reflex/
 | `/reflex:guardrail` | Control destructive operation guardrails (on/off/status) |
 | `/reflex:ingest` | Ingest files into Qdrant |
 | `/reflex:update-mcp` | Check/apply MCP package updates |
-| `/reflex:init` | Initialize MCP server credentials |
+| `/reflex:init` | Initialize MCP server credentials or project workflows |
 | `/reflex:handoff` | Generate handoff document for session continuation |
 | `/reflex:statusline` | Configure the Reflex status line (on/off/status/color) |
 | `/reflex:summarize-transcript` | Summarize meeting transcript to structured notes |
@@ -161,15 +176,15 @@ Metadata:
 
 ## Git Commits
 
-When committing changes, use this format (no Co-Authored-By):
+When committing changes, use this format:
 
 ```
 <summary line>
 
 <optional body>
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
+
+**No AI attribution.** Do NOT add Co-Authored-By lines, "Generated with" footers, or any other AI tool branding to commits.
 
 ## LangFuse Observability
 

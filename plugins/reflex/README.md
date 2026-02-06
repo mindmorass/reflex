@@ -43,7 +43,7 @@ Reflex works best with these plugins (checked on session start):
 
 Use `/reflex:task "your task" --rag` to enrich tasks with stored knowledge before delegating to official plugin agents.
 
-### 40 Skills
+### 42 Skills
 
 Skills provide reusable knowledge patterns. Run `/reflex:skills` to list all.
 
@@ -74,9 +74,11 @@ Key skills include:
 | `/reflex:guardrail <on\|off\|status>` | Control destructive operation guardrails |
 | `/reflex:ingest <path>` | Ingest files into Qdrant |
 | `/reflex:update-mcp <check\|apply>` | Check/apply MCP package updates |
-| `/reflex:init <service>` | Initialize MCP server credentials |
+| `/reflex:init <service\|workflow>` | Initialize MCP server credentials or project workflows |
 | `/reflex:handoff [path]` | Generate handoff document for session continuation |
 | `/reflex:statusline <on\|off\|status\|color>` | Configure the Reflex status line |
+| `/reflex:summarize-transcript <source>` | Summarize meeting transcript to structured notes |
+| `/reflex:azure-discover [scope]` | Discover and document Azure infrastructure |
 
 ### Notifications
 
@@ -111,26 +113,27 @@ Docker compose files are stored at `~/.claude/docker/`:
 
 ### MCP Servers
 
-Pre-configured in `.mcp.json`:
+Reflex includes a catalog of 15 MCP servers. Use `/reflex:mcp select` to choose which to install, or `/reflex:mcp install <name>` for individual servers.
 
-| Server | Package | Purpose |
-|--------|---------|---------|
-| qdrant | `mcp-server-qdrant` | Vector database storage |
-| atlassian | `mcp-atlassian` | Jira/Confluence |
-| git | `mcp-server-git` | Local git operations |
-| github | `ghcr.io/github/github-mcp-server` | GitHub API |
-| microsoft-docs | `mcp-remote` (MS Learn) | MS Learn documentation |
-| azure | `@azure/mcp` | Azure resource management |
-| azure-devops | `@azure-devops/mcp` | Azure DevOps |
-| markitdown | `markitdown-mcp-npx` | Document conversion |
-| sql-server | `mssql-mcp` | SQL Server queries |
-| playwright | `@playwright/mcp` | Browser automation |
-| devbox | `@microsoft/devbox-mcp` | Microsoft Dev Box |
-| azure-ai-foundry | `mcp-remote` (Azure AI) | Azure AI Foundry |
-| kubernetes | `kubernetes-mcp-server` | Kubernetes cluster management |
-| google-workspace | `workspace-mcp` | Gmail, Calendar, Drive, Docs |
+| Server | Category | Purpose |
+|--------|----------|---------|
+| qdrant | data | Vector database storage |
+| atlassian | collaboration | Jira/Confluence |
+| git | development | Local git operations |
+| github | development | GitHub API |
+| microsoft-docs | docs | MS Learn documentation |
+| azure | cloud | Azure resource management |
+| azure-devops | cloud | Azure DevOps |
+| markitdown | docs | Document conversion |
+| sql-server | database | SQL Server queries |
+| playwright | development | Browser automation |
+| devbox | cloud | Microsoft Dev Box |
+| azure-ai-foundry | cloud | Azure AI Foundry |
+| kubernetes | cloud | Kubernetes cluster management |
+| spacelift | cloud | Spacelift IaC management and deployment |
+| google-workspace | collaboration | Gmail, Calendar, Drive, Docs |
 
-Configure credentials with `/reflex:init <service>`. See `/reflex:init status` for current state.
+Configure credentials with `/reflex:init <service>`. See `/reflex:mcp status` for current state.
 
 ## Project Structure
 
@@ -140,10 +143,10 @@ plugins/reflex/
 │   └── plugin.json      # Plugin manifest
 ├── agents/              # 2 agents
 ├── commands/            # Slash commands
-├── skills/              # 40 skill definitions
+├── skills/              # 42 skill definitions
 ├── hooks/               # Session hooks
 ├── scripts/             # Helper scripts
-├── .mcp.json            # MCP server configurations
+├── mcp-catalog.json     # MCP server catalog (registry)
 └── CLAUDE.md            # Claude Code instructions
 ```
 

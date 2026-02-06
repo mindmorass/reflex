@@ -1,0 +1,206 @@
+{
+  "version": 1,
+  "servers": {
+    "qdrant": {
+      "description": "Qdrant vector database for RAG and memory",
+      "category": "data",
+      "url": "https://github.com/qdrant/mcp-server-qdrant",
+      "requires": ["QDRANT_URL"],
+      "definition": {
+        "command": "uvx",
+        "args": ["--python", "3.12", "--with", "fastembed", "mcp-server-qdrant==0.8.1"],
+        "env": {
+          "QDRANT_URL": "${QDRANT_URL:-http://localhost:6333}",
+          "COLLECTION_NAME": "${WORKSPACE_PROFILE:-default}_memories"
+        }
+      }
+    },
+    "atlassian": {
+      "description": "Jira and Confluence integration",
+      "category": "collaboration",
+      "url": "https://github.com/sooperset/mcp-atlassian",
+      "requires": ["JIRA_URL", "JIRA_USERNAME", "JIRA_API_TOKEN"],
+      "definition": {
+        "command": "uvx",
+        "args": ["--python", "3.12", "mcp-atlassian==0.13.0"],
+        "env": {
+          "JIRA_URL": "${JIRA_URL}",
+          "JIRA_USERNAME": "${JIRA_USERNAME}",
+          "JIRA_API_TOKEN": "${JIRA_API_TOKEN}",
+          "CONFLUENCE_URL": "${CONFLUENCE_URL}",
+          "CONFLUENCE_USERNAME": "${CONFLUENCE_USERNAME}",
+          "CONFLUENCE_API_TOKEN": "${CONFLUENCE_API_TOKEN}"
+        }
+      }
+    },
+    "git": {
+      "description": "Git repository operations",
+      "category": "development",
+      "url": "https://github.com/modelcontextprotocol/servers",
+      "requires": [],
+      "definition": {
+        "command": "uvx",
+        "args": ["mcp-server-git==2025.12.18", "--repository", "."],
+        "env": {}
+      }
+    },
+    "github": {
+      "description": "GitHub repos, issues, PRs, and code security",
+      "category": "development",
+      "url": "https://github.com/github/github-mcp-server",
+      "requires": ["GITHUB_TOKEN"],
+      "definition": {
+        "command": "docker",
+        "args": [
+          "run", "-i", "--rm",
+          "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+          "-e", "GITHUB_TOOLSETS",
+          "ghcr.io/github/github-mcp-server"
+        ],
+        "env": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}",
+          "GITHUB_TOOLSETS": "repos,issues,pull_requests,code_security"
+        }
+      }
+    },
+    "microsoft-docs": {
+      "description": "Microsoft Learn documentation search",
+      "category": "docs",
+      "url": "https://github.com/MicrosoftDocs/mcp",
+      "requires": [],
+      "definition": {
+        "command": "npx",
+        "args": ["-y", "mcp-remote@0.1.37", "https://mcp.microsoft-learn.com/api/mcp/sse"]
+      }
+    },
+    "azure": {
+      "description": "Azure resource management",
+      "category": "cloud",
+      "url": "https://github.com/microsoft/mcp",
+      "requires": ["AZURE_SUBSCRIPTION_ID", "AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET"],
+      "definition": {
+        "command": "npx",
+        "args": ["-y", "@azure/mcp@2.0.0-beta.10", "server", "start"],
+        "env": {
+          "AZURE_SUBSCRIPTION_ID": "${AZURE_SUBSCRIPTION_ID}",
+          "AZURE_TENANT_ID": "${AZURE_TENANT_ID}",
+          "AZURE_CLIENT_ID": "${AZURE_CLIENT_ID}",
+          "AZURE_CLIENT_SECRET": "${AZURE_CLIENT_SECRET}"
+        }
+      }
+    },
+    "azure-devops": {
+      "description": "Azure DevOps CI/CD and repos",
+      "category": "cloud",
+      "url": "https://github.com/microsoft/azure-devops-mcp",
+      "requires": ["AZURE_DEVOPS_ORG", "AZURE_DEVOPS_PAT"],
+      "definition": {
+        "command": "npx",
+        "args": ["-y", "@azure-devops/mcp@2.2.2"],
+        "env": {
+          "AZURE_DEVOPS_ORG_URL": "https://dev.azure.com/${AZURE_DEVOPS_ORG}",
+          "AZURE_DEVOPS_PAT": "${AZURE_DEVOPS_PAT}"
+        }
+      }
+    },
+    "markitdown": {
+      "description": "Convert files to markdown",
+      "category": "docs",
+      "url": "https://github.com/microsoft/markitdown",
+      "requires": [],
+      "definition": {
+        "command": "uvx",
+        "args": ["markitdown-mcp"]
+      }
+    },
+    "sql-server": {
+      "description": "Microsoft SQL Server queries",
+      "category": "database",
+      "url": "https://github.com/bymcs/mssql-mcp",
+      "requires": ["MSSQL_CONNECTION_STRING"],
+      "definition": {
+        "command": "npx",
+        "args": ["-y", "mssql-mcp@2.1.1"],
+        "env": {
+          "MSSQL_CONNECTION_STRING": "${MSSQL_CONNECTION_STRING}"
+        }
+      }
+    },
+    "playwright": {
+      "description": "Browser automation and testing",
+      "category": "development",
+      "url": "https://github.com/microsoft/playwright-mcp",
+      "requires": [],
+      "definition": {
+        "command": "npx",
+        "args": ["-y", "@playwright/mcp@0.0.55"],
+        "env": {}
+      }
+    },
+    "devbox": {
+      "description": "Microsoft Dev Box management",
+      "category": "cloud",
+      "url": "https://github.com/microsoft/devbox-mcp-server",
+      "requires": ["AZURE_SUBSCRIPTION_ID", "AZURE_TENANT_ID"],
+      "definition": {
+        "command": "npx",
+        "args": ["-y", "@microsoft/devbox-mcp@0.0.3-alpha.4"],
+        "env": {
+          "AZURE_SUBSCRIPTION_ID": "${AZURE_SUBSCRIPTION_ID}",
+          "AZURE_TENANT_ID": "${AZURE_TENANT_ID}"
+        }
+      }
+    },
+    "azure-ai-foundry": {
+      "description": "Azure AI Foundry models and services",
+      "category": "cloud",
+      "url": "https://github.com/azure-ai-foundry/mcp-foundry",
+      "requires": ["AZURE_TENANT_ID"],
+      "definition": {
+        "command": "npx",
+        "args": ["-y", "mcp-remote@0.1.37", "https://mcp.ai.azure.com"],
+        "env": {
+          "AZURE_TENANT_ID": "${AZURE_TENANT_ID}"
+        }
+      }
+    },
+    "kubernetes": {
+      "description": "Kubernetes cluster operations",
+      "category": "cloud",
+      "url": "https://github.com/containers/kubernetes-mcp-server",
+      "requires": [],
+      "definition": {
+        "command": "npx",
+        "args": ["-y", "kubernetes-mcp-server@0.0.56", "--disable-destructive"],
+        "env": {
+          "KUBECONFIG": "${KUBECONFIG:-~/.kube/config}"
+        }
+      }
+    },
+    "spacelift": {
+      "description": "Spacelift IaC management and deployment",
+      "category": "cloud",
+      "url": "https://github.com/spacelift-io/spacectl",
+      "requires": [],
+      "definition": {
+        "command": "spacectl",
+        "args": ["mcp", "server"]
+      }
+    },
+    "google-workspace": {
+      "description": "Gmail, Calendar, Drive, Docs, Sheets",
+      "category": "collaboration",
+      "url": "https://github.com/taylorwilsdon/google_workspace_mcp",
+      "requires": ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "USER_GOOGLE_EMAIL"],
+      "definition": {
+        "command": "uvx",
+        "args": ["--python", "3.12", "workspace-mcp==1.7.1", "--tool-tier", "core"],
+        "env": {
+          "GOOGLE_OAUTH_CLIENT_ID": "${GOOGLE_OAUTH_CLIENT_ID}",
+          "GOOGLE_OAUTH_CLIENT_SECRET": "${GOOGLE_OAUTH_CLIENT_SECRET}",
+          "USER_GOOGLE_EMAIL": "${USER_GOOGLE_EMAIL}"
+        }
+      }
+    }
+  }
+}

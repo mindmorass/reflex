@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0](https://github.com/mindmorass/reflex/compare/v1.5.0...v1.6.0) (2026-02-06)
+
+
+### Features
+
+* Add pre-push rebase instruction to git workflow ([e3a63b7](https://github.com/mindmorass/reflex/commit/e3a63b7730c8ef880a474e9bc5384cace521629f))
+
 ## [1.5.0](https://github.com/mindmorass/reflex/compare/v1.4.1...v1.5.0) (2026-02-06)
 
 

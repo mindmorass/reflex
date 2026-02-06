@@ -44,9 +44,14 @@ TOOL_DATA=$(cat)
 debug "Tool data received: ${TOOL_DATA:0:200}..."
 
 # Call Python script to send trace using uvx (ensures langfuse is available)
-# Uses Python 3.12 for compatibility with langfuse/pydantic
-debug "Calling uvx python langfuse-trace.py"
-uvx --quiet --python 3.12 --with langfuse python "$SCRIPT_DIR/langfuse-trace.py" <<< "$TOOL_DATA" 2>>"$DEBUG_LOG"
+# Prefer Python 3.12 for langfuse/pydantic compatibility, fall back to system default
+PYTHON_FLAG="--python 3.12"
+if ! uvx --quiet --python 3.12 python -c "pass" 2>/dev/null; then
+    debug "Python 3.12 not available, using system default"
+    PYTHON_FLAG=""
+fi
+debug "Calling uvx python langfuse-trace.py ($PYTHON_FLAG)"
+uvx --quiet $PYTHON_FLAG --with langfuse python "$SCRIPT_DIR/langfuse-trace.py" <<< "$TOOL_DATA" 2>>"$DEBUG_LOG"
 EXIT_CODE=$?
 debug "uvx exit code: $EXIT_CODE"
 exit $EXIT_CODE

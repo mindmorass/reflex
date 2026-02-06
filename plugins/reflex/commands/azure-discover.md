@@ -1,6 +1,6 @@
 ---
 description: Discover and document Azure infrastructure with architecture diagrams
-allowed-tools: Write, AskUserQuestion, mcp__plugin_reflex_azure__subscription_list, mcp__plugin_reflex_azure__group_list, mcp__plugin_reflex_azure__appservice, mcp__plugin_reflex_azure__functionapp, mcp__plugin_reflex_azure__aks, mcp__plugin_reflex_azure__acr, mcp__plugin_reflex_azure__keyvault, mcp__plugin_reflex_azure__sql, mcp__plugin_reflex_azure__cosmos, mcp__plugin_reflex_azure__postgres, mcp__plugin_reflex_azure__mysql, mcp__plugin_reflex_azure__redis, mcp__plugin_reflex_azure__eventhubs, mcp__plugin_reflex_azure__servicebus, mcp__plugin_reflex_azure__eventgrid, mcp__plugin_reflex_azure__signalr, mcp__plugin_reflex_azure__storage, mcp__plugin_reflex_azure__appconfig, mcp__plugin_reflex_azure__applicationinsights, mcp__plugin_reflex_azure__monitor, mcp__plugin_reflex_azure__search, mcp__plugin_reflex_qdrant__qdrant-store
+allowed-tools: Write, AskUserQuestion, mcp__azure__subscription_list, mcp__azure__group_list, mcp__azure__appservice, mcp__azure__functionapp, mcp__azure__aks, mcp__azure__acr, mcp__azure__keyvault, mcp__azure__sql, mcp__azure__cosmos, mcp__azure__postgres, mcp__azure__mysql, mcp__azure__redis, mcp__azure__eventhubs, mcp__azure__servicebus, mcp__azure__eventgrid, mcp__azure__signalr, mcp__azure__storage, mcp__azure__appconfig, mcp__azure__applicationinsights, mcp__azure__monitor, mcp__azure__search, mcp__qdrant__qdrant-store
 argument-hint: [--subscription NAME] [--resource-group NAME] [--output FILE] [--store]
 ---
 
@@ -48,7 +48,7 @@ Parse the user's input to extract:
 
 If `--subscription` was not provided:
 
-1. Call `mcp__plugin_reflex_azure__subscription_list` to list available subscriptions
+1. Call `mcp__azure__subscription_list` to list available subscriptions
 2. Use `AskUserQuestion` to let the user select a subscription
 3. If only one subscription exists, use it automatically
 
@@ -58,7 +58,7 @@ If `--subscription` was provided, use it directly.
 
 If `--resource-group` was not provided:
 
-1. Call `mcp__plugin_reflex_azure__group_list` for the selected subscription
+1. Call `mcp__azure__group_list` for the selected subscription
 2. Use `AskUserQuestion` to let the user select resource group(s) or "All resource groups"
 3. If only one resource group exists, use it automatically
 

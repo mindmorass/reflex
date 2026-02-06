@@ -20,7 +20,7 @@ Patterns for discovering Azure resources, mapping relationships, and generating 
 
 - Azure credentials configured (e.g., `az login` or service principal)
 - **Reader** role (minimum) on the target subscription or resource group
-- Azure MCP tools available and loaded (`mcp__plugin_reflex_azure__*`)
+- Azure MCP tools available and loaded (`mcp__azure__*`)
 
 ## Resource Taxonomy
 

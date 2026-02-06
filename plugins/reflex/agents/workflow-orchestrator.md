@@ -10,13 +10,13 @@ tools:
   - Task
   - TodoWrite
   - AskUserQuestion
-  - mcp__plugin_reflex_atlassian__jira_search
-  - mcp__plugin_reflex_atlassian__jira_create_issue
-  - mcp__plugin_reflex_atlassian__jira_get_issue
-  - mcp__plugin_reflex_atlassian__jira_update_issue
-  - mcp__plugin_reflex_github__search_issues
-  - mcp__plugin_reflex_github__create_issue
-  - mcp__plugin_reflex_github__get_issue
+  - mcp__atlassian__jira_search
+  - mcp__atlassian__jira_create_issue
+  - mcp__atlassian__jira_get_issue
+  - mcp__atlassian__jira_update_issue
+  - mcp__github__search_issues
+  - mcp__github__create_issue
+  - mcp__github__get_issue
 ---
 
 You are a workflow orchestrator that coordinates complex tasks across specialized subagents.
@@ -35,7 +35,7 @@ You are a workflow orchestrator that coordinates complex tasks across specialize
 Read project context from the current working directory:
 
 ```bash
-CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$PWD/.claude}"
+CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 CONTEXT_FILE="$CONFIG_DIR/context.yaml"
 JOB_DIR="$CONFIG_DIR/jobs"
 WORKFLOW_DIR="$CONFIG_DIR/workflows"
@@ -184,28 +184,31 @@ Handle these commands directly:
 
 ### Jira
 
-```bash
+Use the MCP tools (prefixed with `mcp__atlassian__`):
+
+```
 # Check if ticket exists
-jira_search "key = $TICKET_ID"
+mcp__atlassian__jira_search: query="key = $TICKET_ID"
 
 # Create ticket
-jira_create_issue --project "$PROJECT_KEY" --type Task --summary "$SUMMARY"
+mcp__atlassian__jira_create_issue: project="$PROJECT_KEY", issueType="Task", summary="$SUMMARY"
 
 # Update ticket
-jira_update_issue --issue "$TICKET_ID" --status "In Progress"
+mcp__atlassian__jira_update_issue: issueKey="$TICKET_ID", fields={status: "In Progress"}
 ```
 
 ### GitHub
 
-```bash
+Use the MCP tools (prefixed with `mcp__plugin_reflex_github__`):
+
+```
 # Search for issue
-github_search_issues "repo:$OWNER/$REPO $TICKET_ID in:title"
+mcp__plugin_reflex_github__search_issues: query="repo:$OWNER/$REPO $TICKET_ID in:title"
 
 # Create issue
-github_create_issue --owner "$OWNER" --repo "$REPO" --title "$TITLE"
+mcp__plugin_reflex_github__create_issue: owner="$OWNER", repo="$REPO", title="$TITLE"
 
-# Update issue
-github_update_issue --issue "$ISSUE_NUMBER" --state open
+# Update issue — use issue_write or search_issues to update state
 ```
 
 ## Error Handling

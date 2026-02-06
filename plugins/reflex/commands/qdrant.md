@@ -6,7 +6,7 @@ argument-hint: <on|off|status>
 
 # Qdrant Connection Control
 
-Enable or disable the Qdrant vector database connection. This assumes you have Qdrant running and accessible (self-managed, Docker, or hosted).
+Enable or disable Qdrant tool calls within the current session. When disabled, a PreToolUse hook blocks all qdrant MCP tool calls. This assumes you have Qdrant running and accessible (self-managed, Docker, or hosted).
 
 ## Instructions
 

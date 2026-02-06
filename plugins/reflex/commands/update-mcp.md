@@ -1,6 +1,6 @@
 ---
 description: Check for and apply MCP server package updates
-allowed-tools: Bash(cat:*), Bash(curl:*), Bash(jq:*), Bash(npm:*), Bash(echo:*), Bash(sed:*), Read, Edit
+allowed-tools: Bash(cat:*), Bash(curl:*), Bash(jq:*), Bash(npm:*), Bash(echo:*), Bash(sed:*), Bash(kill:*), Read, Edit
 argument-hint: <check|apply|clear-cache>
 ---
 
@@ -24,11 +24,11 @@ Check npm and PyPI for newer versions of pinned packages:
 echo "Checking MCP package versions..."
 echo ""
 
-MCP_JSON="${CLAUDE_PLUGIN_ROOT}/.mcp.json"
+CATALOG="${CLAUDE_PLUGIN_ROOT}/mcp-catalog.json"
 
 # npm packages
 echo "**npm packages:**"
-for pkg in $(cat "$MCP_JSON" | jq -r '.mcpServers | to_entries[] | select(.value.command == "npx") | .value.args[] | select(contains("@") and (startswith("-") | not) and (startswith("http") | not))' | sort -u); do
+for pkg in $(cat "$CATALOG" | jq -r '.servers | to_entries[] | select(.value.definition.command == "npx") | .value.definition.args[] | select(contains("@") and (startswith("-") | not) and (startswith("http") | not))' | sort -u); do
   # Extract package name (everything before last @) and version (after last @)
   name=$(echo "$pkg" | sed 's/@[^@]*$//')
   current=$(echo "$pkg" | grep -oE '[^@]+$')
@@ -47,7 +47,7 @@ done
 
 echo ""
 echo "**PyPI packages:**"
-for pkg in $(cat "$MCP_JSON" | jq -r '.mcpServers | to_entries[] | select(.value.command == "uvx") | .value.args[] | select(contains("=="))'); do
+for pkg in $(cat "$CATALOG" | jq -r '.servers | to_entries[] | select(.value.definition.command == "uvx") | .value.definition.args[] | select(contains("=="))'); do
   # Extract package name and current version
   name="${pkg%%==*}"
   # Handle packages with repository suffix
@@ -65,20 +65,21 @@ for pkg in $(cat "$MCP_JSON" | jq -r '.mcpServers | to_entries[] | select(.value
 done
 
 echo ""
-echo "Run '/reflex:update-mcp apply' to update .mcp.json with latest versions."
+echo "Run '/reflex:update-mcp apply' to update mcp-catalog.json with latest versions."
 ```
 
 ### apply
 
-Apply updates - read the current .mcp.json, update to latest versions, and show diff.
+Apply updates - read the current mcp-catalog.json, update to latest versions, and show diff.
 
-First, run the check logic but capture the updates, then use the Edit tool to update .mcp.json with new versions.
+First, run the check logic but capture the updates, then use the Edit tool to update mcp-catalog.json with new versions.
 
 The assistant should:
-1. Read the .mcp.json file
+1. Read the mcp-catalog.json file
 2. For each package, query npm/PyPI for latest version
-3. Use Edit tool to update each version string
-4. Show summary of changes
+3. Use Edit tool to update each version string in mcp-catalog.json
+4. Run `${CLAUDE_PLUGIN_ROOT}/scripts/mcp-generate.sh` to regenerate .mcp.json
+5. Show summary of changes
 
 ### clear-cache
 

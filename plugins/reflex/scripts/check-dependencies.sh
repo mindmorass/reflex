@@ -35,11 +35,14 @@ GIT_USER_EMAIL=$(get_git_config "user.email")
 
 # Persist git user info to session environment if CLAUDE_ENV_FILE is available
 if [[ -n "${CLAUDE_ENV_FILE:-}" ]] && [[ -n "$GIT_USER_NAME" ]]; then
+  # Use double quotes with escaped inner quotes to handle names with apostrophes
+  escaped_name="${GIT_USER_NAME//\\/\\\\}"
+  escaped_name="${escaped_name//\"/\\\"}"
   {
-    echo "export GIT_AUTHOR_NAME='${GIT_USER_NAME}'"
-    echo "export GIT_COMMITTER_NAME='${GIT_USER_NAME}'"
-    [[ -n "$GIT_USER_EMAIL" ]] && echo "export GIT_AUTHOR_EMAIL='${GIT_USER_EMAIL}'"
-    [[ -n "$GIT_USER_EMAIL" ]] && echo "export GIT_COMMITTER_EMAIL='${GIT_USER_EMAIL}'"
+    echo "export GIT_AUTHOR_NAME=\"${escaped_name}\""
+    echo "export GIT_COMMITTER_NAME=\"${escaped_name}\""
+    [[ -n "$GIT_USER_EMAIL" ]] && echo "export GIT_AUTHOR_EMAIL=\"${GIT_USER_EMAIL}\""
+    [[ -n "$GIT_USER_EMAIL" ]] && echo "export GIT_COMMITTER_EMAIL=\"${GIT_USER_EMAIL}\""
   } >> "$CLAUDE_ENV_FILE"
 fi
 
@@ -117,6 +120,28 @@ else
 fi
 
 # =============================================================================
+# MCP Server Migration & Status
+# =============================================================================
+MCP_CONFIG="${CLAUDE_DIR}/reflex/mcp-config.json"
+MCP_CATALOG="${CLAUDE_PLUGIN_ROOT}/mcp-catalog.json"
+MCP_GENERATE="${CLAUDE_PLUGIN_ROOT}/scripts/mcp-generate.sh"
+
+MCP_STATUS=""
+if [[ -f "$MCP_CATALOG" ]]; then
+  TOTAL_SERVERS=$(jq '.servers | length' "$MCP_CATALOG" 2>/dev/null || echo "0")
+
+  if [[ ! -f "$MCP_CONFIG" ]] && [[ -x "$MCP_GENERATE" ]]; then
+    # First run: migrate to create config with all servers installed+enabled
+    "$MCP_GENERATE" --migrate --catalog "$MCP_CATALOG" --config "$MCP_CONFIG" >/dev/null 2>&1 || true
+    MCP_STATUS="MCP servers migrated: all ${TOTAL_SERVERS} servers installed and enabled. Customize with /reflex:mcp select"
+  elif [[ -f "$MCP_CONFIG" ]]; then
+    INSTALLED=$(jq '[.servers | to_entries[] | select(.value.installed == true)] | length' "$MCP_CONFIG" 2>/dev/null || echo "0")
+    ENABLED=$(jq '[.servers | to_entries[] | select(.value.installed == true and .value.enabled == true)] | length' "$MCP_CONFIG" 2>/dev/null || echo "0")
+    MCP_STATUS="MCP servers: ${ENABLED}/${TOTAL_SERVERS} enabled (${INSTALLED} installed). Manage: /reflex:mcp"
+  fi
+fi
+
+# =============================================================================
 # Build Context Output
 # =============================================================================
 CONTEXT=""
@@ -140,6 +165,11 @@ if [[ "$UPDATE_AVAILABLE" == "yes" ]]; then
   CONTEXT="${CONTEXT}\nRun: claude plugin update reflex@mindmorass-reflex\n"
 fi
 
+# Add MCP server status
+if [[ -n "$MCP_STATUS" ]]; then
+  CONTEXT="${CONTEXT}\n${MCP_STATUS}\n"
+fi
+
 # Add missing plugins warning
 if [[ ${#MISSING_PLUGINS[@]} -gt 0 ]]; then
   CONTEXT="${CONTEXT}\nReflex recommends installing official Claude Code plugins:\n"
@@ -154,14 +184,13 @@ fi
 
 # Output JSON for SessionStart hook (only if we have context)
 if [[ -n "$CONTEXT" ]]; then
-  cat <<EOF
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "${CONTEXT}"
-  }
-}
-EOF
+  # Use printf to expand \n sequences, then pipe through jq for safe JSON encoding
+  printf '%b' "$CONTEXT" | jq -Rs '{
+    hookSpecificOutput: {
+      hookEventName: "SessionStart",
+      additionalContext: .
+    }
+  }'
 fi
 
 exit 0

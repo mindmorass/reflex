@@ -16,8 +16,8 @@ fi
 # Read tool data from stdin (JSON from Claude Code hook)
 TOOL_DATA=$(cat)
 
-# Extract tool name using simple parsing (avoid jq dependency)
-TOOL_NAME=$(echo "$TOOL_DATA" | grep -o '"tool_name"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*: *"\([^"]*\)".*/\1/' || echo "")
+# Extract tool name
+TOOL_NAME=$(echo "$TOOL_DATA" | jq -r '.tool_name // empty' 2>/dev/null || echo "")
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

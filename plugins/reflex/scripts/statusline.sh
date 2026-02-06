@@ -54,7 +54,7 @@ if [[ -n "$cwd" && -d "$cwd" ]]; then
     branch=$(git -C "$cwd" branch --show-current 2>/dev/null)
     if [[ -n "$branch" ]]; then
         # Count uncommitted files
-        file_count=$(git -C "$cwd" --no-optional-locks status --porcelain -uall 2>/dev/null | wc -l | tr -d ' ')
+        file_count=$(git -C "$cwd" --no-optional-locks status --porcelain -uno 2>/dev/null | wc -l | tr -d ' ')
 
         # Get ahead/behind status
         upstream=$(git -C "$cwd" rev-parse --abbrev-ref @{upstream} 2>/dev/null)

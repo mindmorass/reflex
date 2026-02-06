@@ -1,6 +1,6 @@
 ---
 description: Summarize a meeting transcript into structured notes
-allowed-tools: Read, Write, Bash(uvx:*), Bash(wc:*), Bash(mkdir:*), Bash(cp:*), mcp__plugin_reflex_qdrant__qdrant-store, mcp__plugin_reflex_google-workspace__get_doc_content, mcp__plugin_reflex_google-workspace__get_drive_file_content, mcp__plugin_reflex_markitdown__convert_to_markdown
+allowed-tools: Read, Write, Bash(uvx:*), Bash(wc:*), Bash(mkdir:*), Bash(cp:*), mcp__qdrant__qdrant-store, mcp__google-workspace__get_doc_content, mcp__google-workspace__get_drive_file_content, mcp__markitdown__convert_to_markdown
 argument-hint: <source> [--to <directory>] [--llm ollama|openai|anthropic] [--model NAME] [--title "Title"]
 ---
 

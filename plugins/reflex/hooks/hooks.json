@@ -22,6 +22,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "mcp__.*qdrant__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/qdrant-hook.sh",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PostToolUse": [

@@ -186,6 +186,14 @@ When committing changes, use this format:
 
 **No AI attribution.** Do NOT add Co-Authored-By lines, "Generated with" footers, or any other AI tool branding to commits.
 
+**Before pushing**, always sync with the remote to avoid rejected pushes:
+
+```bash
+git pull --rebase
+```
+
+If the rebase has conflicts, stop and inform the user. Do NOT resolve conflicts automatically — let the user decide the strategy.
+
 ## LangFuse Observability
 
 Reflex includes optional LangFuse integration for tracing tool calls and agent interactions.

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0](https://github.com/mindmorass/reflex/compare/v1.3.1...v1.4.0) (2026-02-06)
+
+
+### Features
+
+* Decouple MCP servers from plugin namespace ([7743d45](https://github.com/mindmorass/reflex/commit/7743d45700322ce26b647567411214fa7b11bc14))
+
 ## [1.3.1](https://github.com/mindmorass/reflex/compare/v1.3.0...v1.3.1) (2026-02-06)
 
 

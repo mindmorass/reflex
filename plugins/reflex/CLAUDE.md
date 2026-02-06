@@ -72,7 +72,7 @@ MCP servers are managed separately from the plugin. The plugin provides a **cata
 
 - **Catalog**: `plugins/reflex/mcp-catalog.json` — registry of all available servers
 - **User config**: `${CLAUDE_CONFIG_DIR}/reflex/mcp-config.json` — tracks installed/enabled state
-- **Generated config**: `${WORKSPACE_HOME:-$HOME}/.mcp.json` — runtime artifact Claude Code reads
+- **Registration**: Servers are registered via `claude mcp add-json --scope user` (stored in `.claude.json`)
 - **Tool names**: `mcp__<server>__<tool>` (e.g., `mcp__atlassian__jira_search`)
 
 Key commands:

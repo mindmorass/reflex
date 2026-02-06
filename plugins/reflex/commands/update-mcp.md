@@ -13,7 +13,7 @@ Check for updates to MCP server packages and optionally apply them.
 ### Arguments
 
 - `check` - Check for available updates (default)
-- `apply` - Apply all available updates to .mcp.json
+- `apply` - Apply all available updates to MCP server versions
 - `clear-cache` - Clear npx and uvx caches to force fresh downloads
 
 ### check
@@ -78,7 +78,7 @@ The assistant should:
 1. Read the mcp-catalog.json file
 2. For each package, query npm/PyPI for latest version
 3. Use Edit tool to update each version string in mcp-catalog.json
-4. Run `${CLAUDE_PLUGIN_ROOT}/scripts/mcp-generate.sh` to regenerate .mcp.json
+4. Run `${CLAUDE_PLUGIN_ROOT}/scripts/mcp-generate.sh` to sync updated servers with Claude Code
 5. Show summary of changes
 
 ### clear-cache
@@ -131,7 +131,7 @@ Manage MCP server package versions.
 
 Commands:
   check        Check for available updates (default)
-  apply        Apply updates to .mcp.json
+  apply        Apply updates to MCP server versions
   clear-cache  Clear npx/uvx caches
 
 Version Format:

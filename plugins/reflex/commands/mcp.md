@@ -6,7 +6,7 @@ argument-hint: [list|select|install|uninstall|enable|disable|status|generate] [s
 
 # MCP Server Management
 
-Manage MCP servers for your workspace. Servers are installed from the Reflex catalog and generated to `${WORKSPACE_HOME:-$HOME}/.mcp.json`, which Claude Code inherits into all child project directories.
+Manage MCP servers for your workspace. Servers are installed from the Reflex catalog and registered with Claude Code via `claude mcp add-json` (user scope).
 
 ## Paths
 
@@ -16,7 +16,6 @@ CATALOG="${PLUGIN_ROOT}/mcp-catalog.json"
 CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/reflex"
 CONFIG="${CONFIG_DIR}/mcp-config.json"
 GENERATE="${PLUGIN_ROOT}/scripts/mcp-generate.sh"
-OUTPUT="${WORKSPACE_HOME:-$HOME}/.mcp.json"
 ```
 
 ## Subcommands
@@ -183,7 +182,7 @@ Show detailed status for installed servers including credential readiness and li
 
 ### `/reflex:mcp generate`
 
-Explicitly regenerate `.mcp.json` from current config.
+Explicitly re-sync MCP servers with Claude Code from current config.
 
 **Instructions:**
 

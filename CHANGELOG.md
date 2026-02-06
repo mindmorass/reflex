@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1](https://github.com/mindmorass/reflex/compare/v1.3.0...v1.3.1) (2026-02-06)
+
+
+### Bug Fixes
+
+* Add spacelift to MCP select groups and fix README description ([60553d8](https://github.com/mindmorass/reflex/commit/60553d82df8d69a454124e7161007032239ecaf8))
+* Remove bundled MCP servers and sync version to 1.3.0 ([733386e](https://github.com/mindmorass/reflex/commit/733386e6b12f96fdfbd3258f3172bc5e812fa683))
+
 ## [1.3.0](https://github.com/mindmorass/reflex/compare/v1.2.0...v1.3.0) (2026-02-06)
 
 

@@ -136,14 +136,16 @@ Write the report to the output directory resolved in Step 1, combined with the o
 
 ### Step 9: Store in Qdrant (Optional) and Report Results
 
-If `--store` was specified, store the report in Qdrant:
+If `--store` was specified, store a **summary** in Qdrant (not the full report — structured documents with tables and diagrams fragment poorly in vector search). The full report stays on disk; the Qdrant entry is a retrieval pointer.
+
+Build a concise summary (3-5 sentences) covering: what resource was traced, key dependencies found, networking topology highlights, and any notable security findings.
 
 ```
 Tool: qdrant-store
-Information: "<full report content>"
+Information: "Azure topology trace for <resource-name> (<type-shorthand>) in <resource-group>, <location>. <summary of key dependencies — e.g., 'Runs in prod-vnet/app-subnet, secured by app-nsg, pulls images from prodregistry ACR, authenticates via user-assigned managed identity, secrets from prod-keyvault.'> <dependency-count> dependencies traced. Full report: <output-file-path>"
 Metadata:
   source: "azure_discovery"
-  content_type: "infrastructure_topology"
+  content_type: "infrastructure_summary"
   harvested_at: "<current ISO 8601 timestamp>"
   subscription_name: "<subscription name>"
   subscription_id: "<subscription ID>"
@@ -152,6 +154,7 @@ Metadata:
   resource_group: "<target resource group>"
   dependency_count: <total count>
   regions: "<comma-separated regions>"
+  report_path: "<full output file path>"
   category: "devops"
   subcategory: "azure"
   type: "topology_report"

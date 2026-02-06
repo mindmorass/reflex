@@ -1,105 +1,124 @@
 ---
-description: Discover and document Azure infrastructure with architecture diagrams
-allowed-tools: Write, AskUserQuestion, mcp__azure__subscription_list, mcp__azure__group_list, mcp__azure__appservice, mcp__azure__functionapp, mcp__azure__aks, mcp__azure__acr, mcp__azure__keyvault, mcp__azure__sql, mcp__azure__cosmos, mcp__azure__postgres, mcp__azure__mysql, mcp__azure__redis, mcp__azure__eventhubs, mcp__azure__servicebus, mcp__azure__eventgrid, mcp__azure__signalr, mcp__azure__storage, mcp__azure__appconfig, mcp__azure__applicationinsights, mcp__azure__monitor, mcp__azure__search, mcp__qdrant__qdrant-store
-argument-hint: [--subscription NAME] [--resource-group NAME] [--output FILE] [--store]
+description: Trace Azure resource dependencies and generate topology diagrams
+allowed-tools: Bash(az:*), Bash(dot:*), Write, AskUserQuestion, mcp__qdrant__qdrant-store
+argument-hint: <resource-name> [--subscription NAME] [--output FILE] [--store]
 ---
 
-# Azure Resource Discovery
+# Azure Resource Dependency Tracer
 
-Discover Azure resources using Azure MCP tools, map relationships, and generate a markdown report with an embedded Mermaid architecture diagram.
+Trace all dependencies of a specific Azure resource — networking, security, identity, monitoring — and generate a topology diagram with metadata tables.
 
-**SAFETY: This command is READ-ONLY. NEVER call Azure MCP tools that create, modify, or delete resources. Only use list/get/read operations for discovery. The `Write` tool is only for writing the output markdown report file.**
+**SAFETY: This command is READ-ONLY. NEVER call `az` commands that create, modify, or delete resources. NEVER call `az account set` or other commands that mutate local CLI state. Only use `show`, `list`, `get`, and `query` operations. Pass `--subscription` as a flag to scope queries instead of switching context. The `Write` tool is only for writing the output markdown report.**
 
 ## Syntax
 
 ```
-/reflex:azure-discover [--subscription NAME] [--resource-group NAME] [--output FILE] [--store]
+/reflex:azure-discover <resource-name> [--subscription NAME] [--output FILE] [--store]
 ```
 
-## Options
+## Arguments
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `--subscription` | (interactive) | Subscription name or ID to discover |
-| `--resource-group` | (interactive) | Resource group name, or "all" for all groups |
-| `--output` | `azure-infrastructure.md` | Output file path for the report |
-| `--store` | `false` | Store the report in Qdrant for RAG queries |
-
-## Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AZURE_SUBSCRIPTION_ID` | Default subscription ID (overridden by `--subscription`) | (none) |
-| `AZURE_TENANT_ID` | Default tenant ID for authentication | (none) |
-
-These are passed to the Azure MCP server at startup via `.mcp.json`. The `--subscription` flag or interactive selection in Step 2 can override the subscription within the active tenant. To switch tenants, update `AZURE_TENANT_ID` and restart the MCP server.
+| Argument | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `<resource-name>` | Yes | — | Name of the Azure resource to trace |
+| `--subscription` | No | (current default) | Subscription name or ID to narrow search |
+| `--output` | No | `<resource-name>-topology.md` | Output file path for the report |
+| `--store` | No | `false` | Store the report in Qdrant for RAG queries |
 
 ## Instructions
 
 ### Step 1: Parse Arguments
 
 Parse the user's input to extract:
-- `--subscription` — skip subscription selection if provided
-- `--resource-group` — skip resource group selection if provided
-- `--output` — custom output file path
+- First positional argument: `<resource-name>` (required — if missing, ask the user)
+- `--subscription` — narrows search scope
+- `--output` — custom output file path (default: `<resource-name>-topology.md`)
 - `--store` — whether to store in Qdrant after generating
 
-### Step 2: Select Subscription
+### Step 2: Verify Prerequisites
 
-If `--subscription` was not provided:
+Run `az account show` to confirm Azure CLI is authenticated.
 
-1. Call `mcp__azure__subscription_list` to list available subscriptions
-2. Use `AskUserQuestion` to let the user select a subscription
-3. If only one subscription exists, use it automatically
+- If the command fails or returns an error, **stop immediately** and tell the user to run `az login` first.
+- If `--subscription` was provided, pass `--subscription "<name>"` to all subsequent `az` commands. Do NOT run `az account set` — it mutates global CLI state.
+- Display the active subscription name and ID for confirmation.
 
-If `--subscription` was provided, use it directly.
+### Step 3: Find Target Resource
 
-### Step 3: Select Resource Group(s)
+Use Azure Resource Graph to find the resource by name:
 
-If `--resource-group` was not provided:
+```bash
+az graph query -q "resources | where name =~ '<resource-name>'" --first 10 -o json
+```
 
-1. Call `mcp__azure__group_list` for the selected subscription
-2. Use `AskUserQuestion` to let the user select resource group(s) or "All resource groups"
-3. If only one resource group exists, use it automatically
+Handle results:
+- **Zero results**: Report that no resource was found. Suggest checking the name or subscription scope.
+- **One result**: Use it as the target. Extract `id`, `name`, `type`, `resourceGroup`, `location`, `subscriptionId`.
+- **Multiple results**: Use `AskUserQuestion` to let the user pick which resource. Show name, type, resource group, and subscription for each.
 
-If `--resource-group` was provided, use it directly. The value "all" means discover all resource groups.
+### Step 4: Run Type-Specific Dependency Tracer
 
-### Step 4: Discover Resources
+Based on the target resource's `type`, select the appropriate tracer from the **azure-resource-discovery** skill:
 
-Call the following Azure MCP tools to discover resources. Run calls in **parallel** where possible for speed. Each tool call should be scoped to the selected subscription and resource group(s). See the **azure-resource-discovery** skill for the full resource taxonomy and category mappings.
+| Resource Type | Tracer |
+|---------------|--------|
+| `Microsoft.App/containerApps` | Container App Tracer |
+| `Microsoft.Compute/virtualMachines` | Virtual Machine Tracer |
+| `Microsoft.ContainerService/managedClusters` | AKS Cluster Tracer |
+| `Microsoft.Web/sites` (not functionapp) | App Service Tracer |
+| `Microsoft.Web/sites` (kind contains `functionapp`) | Function App Tracer |
+| Any other type | Generic Tracer |
 
-Tools to call: `appservice`, `functionapp`, `aks`, `acr`, `keyvault`, `sql`, `cosmos`, `postgres`, `mysql`, `redis`, `eventhubs`, `servicebus`, `eventgrid`, `signalr`, `storage`, `appconfig`, `applicationinsights`, `monitor`, `search`
+Execute the tracer's `az` CLI commands from the skill. Each tracer returns a set of discovered dependencies with metadata.
 
-#### Error Handling
+### Step 5: Collect Dependency Metadata
 
-- **Tool unavailable / not loaded** — skip the tool, note in Discovery Notes
-- **Permission denied (403)** — note which category was inaccessible, continue with remaining tools
-- **Subscription or resource group not found (404)** — stop discovery and inform the user immediately
-- **Empty results** — omit that category section from the report entirely (no empty tables)
+For each discovered dependency, collect:
+- **Name**: Resource name
+- **Type**: Azure resource type
+- **Location**: Region
+- **Resource Group**: May differ from the target's RG
+- **SKU/Tier**: If available
+- **Networking details**: CIDR, IP address, subnet, NSG
+- **Relationship type**: How it relates to the target (e.g., `runs in`, `secured by`, `pulls from`)
 
-### Step 5: Map Relationships
+Use the **Networking Detail Collectors** from the skill to gather VNet, subnet, NSG rules, and private endpoint information.
 
-After collecting resources, infer relationships between them using the patterns in the **azure-resource-discovery** skill's Relationship Mapping section. The skill covers connection string matching, Key Vault references, managed identity, tag-based inference, and more.
+### Step 6: Build Dependency Graph
 
-### Step 6: Generate Mermaid Diagram
+Construct a graph with:
+- **Root node**: The target resource (emphasized in diagram)
+- **Dependency nodes**: All discovered dependencies
+- **Edges**: Relationships with labels from the skill's relationship table
 
-Build a Mermaid flowchart diagram from the discovered resources. Use the azure-resource-discovery skill for diagram templates and styling.
+Group nodes by category: Networking, Security, Data, Monitoring, Identity, Compute/Containers.
 
-Guidelines:
-- Use `flowchart TB` for multi-tier architectures, `flowchart LR` for pipeline/container architectures
-- Group resources by category using `subgraph`
-- Show relationships as arrows with labels describing the connection type
-- Apply the category color scheme from the skill
-- Include resource name, type shorthand, and SKU/tier in node labels
-- Keep the diagram readable — for large environments, focus on the primary resource group or limit to key resources
+### Step 7: Generate Diagram
 
-### Step 7: Generate Markdown Report
+Choose diagram format based on node count:
+- **15 or fewer nodes**: Generate a **Mermaid** flowchart (renders natively in GitHub/VS Code)
+- **More than 15 nodes**: Generate a **Graphviz DOT** diagram, then attempt to render SVG via `dot -Tsvg`
+  - If `dot` is not installed, fall back to Mermaid regardless of node count
 
-Assemble the full report using the **Markdown Report Template** from the **azure-resource-discovery** skill. The report includes these sections: Architecture (Mermaid diagram), Resource Inventory (per-category tables), Relationships, Quick Reference, and Discovery Notes.
+Use the diagram templates from the **azure-resource-discovery** skill. The target resource should be visually emphasized (bold border, distinct fill color).
 
-Write the report to the output file path (default: `azure-infrastructure.md`).
+### Step 8: Generate Markdown Report
 
-### Step 8: Store in Qdrant (Optional)
+Assemble the report using the **Markdown Report Template** from the **azure-resource-discovery** skill. Sections:
+
+1. **Header** — resource type, location, resource group, dependency count
+2. **Topology diagram** — Mermaid block or DOT source + SVG image reference
+3. **Target Resource table** — name, type, RG, location, subscription, SKU, identity type
+4. **Networking table** — VNet, subnet, NSG, private endpoints, public IPs, load balancers with CIDR/IP
+5. **NSG Rules table** — priority, direction, access, protocol, source, destination port (if NSG found)
+6. **Security & Identity table** — managed identity, Key Vault references, RBAC role assignments
+7. **Dependencies table** — all other connected resources with relationship type
+8. **Quick Reference** — subscription, resource group, region, total dependencies
+9. **Trace Notes** — errors, skipped checks, permission issues
+
+Write the report to the output file path.
+
+### Step 9: Store in Qdrant (Optional) and Report Results
 
 If `--store` was specified, store the report in Qdrant:
 
@@ -108,44 +127,43 @@ Tool: qdrant-store
 Information: "<full report content>"
 Metadata:
   source: "azure_discovery"
-  content_type: "infrastructure_report"
+  content_type: "infrastructure_topology"
   harvested_at: "<current ISO 8601 timestamp>"
   subscription_name: "<subscription name>"
   subscription_id: "<subscription ID>"
-  resource_groups: "<comma-separated resource group names>"
-  resource_count: <total count>
+  resource_name: "<target resource name>"
+  resource_type: "<target resource type>"
+  resource_group: "<target resource group>"
+  dependency_count: <total count>
   regions: "<comma-separated regions>"
-  categories: "<comma-separated non-empty categories>"
   category: "devops"
   subcategory: "azure"
-  type: "infrastructure_report"
+  type: "topology_report"
   confidence: "high"
 ```
 
-### Step 9: Report Results
-
 Summarize what was done:
-- Subscription and resource group(s) scanned
-- Total resources discovered, broken down by category
+- Target resource traced (name, type, resource group)
+- Total dependencies discovered, broken down by category
 - Output file path
 - Qdrant storage confirmation (if `--store` was used)
-- Any categories that returned no results or had errors
+- Any commands that failed or returned errors
 
 ## Examples
 
 ```bash
-# Interactive discovery (prompts for subscription and resource group)
-/reflex:azure-discover
+# Trace a container app's dependencies
+/reflex:azure-discover my-container-app
 
-# Specific subscription and resource group
-/reflex:azure-discover --subscription "My Subscription" --resource-group my-rg
+# Trace with specific subscription
+/reflex:azure-discover my-aks-cluster --subscription "Production"
 
-# All resource groups, custom output
-/reflex:azure-discover --subscription "Production" --resource-group all --output infra-report.md
+# Custom output file
+/reflex:azure-discover my-webapp --output webapp-deps.md
 
-# Discover and store in Qdrant
-/reflex:azure-discover --store
+# Trace and store in Qdrant
+/reflex:azure-discover my-vm --store
 
-# Targeted scan with storage
-/reflex:azure-discover --resource-group staging-rg --output staging-infra.md --store
+# Full options
+/reflex:azure-discover my-func-app --subscription "Dev" --output func-topology.md --store
 ```

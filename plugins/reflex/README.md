@@ -78,7 +78,7 @@ Key skills include:
 | `/reflex:handoff [path]` | Generate handoff document for session continuation |
 | `/reflex:statusline <on\|off\|status\|color>` | Configure the Reflex status line |
 | `/reflex:summarize-transcript <source>` | Summarize meeting transcript to structured notes |
-| `/reflex:azure-discover [scope]` | Discover and document Azure infrastructure |
+| `/reflex:azure-discover <resource-name>` | Trace Azure resource dependencies and topology |
 
 ### Notifications
 

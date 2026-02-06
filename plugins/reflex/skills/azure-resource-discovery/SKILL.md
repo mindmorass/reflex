@@ -1,62 +1,440 @@
 ---
 name: azure-resource-discovery
-description: Azure resource discovery patterns for mapping infrastructure, inferring relationships, and generating Mermaid architecture diagrams. Use when discovering Azure resources, creating infrastructure documentation, or building architecture visualizations from live Azure environments.
+description: Azure resource dependency tracing patterns for mapping infrastructure topology, networking, security, and identity. Use when tracing Azure resource dependencies, generating topology diagrams, or documenting how a specific resource connects to its environment.
 ---
 
 # Azure Resource Discovery
 
-Patterns for discovering Azure resources, mapping relationships, and generating architecture diagrams.
+Patterns for tracing Azure resource dependencies, mapping networking and security topology, and generating architecture diagrams.
 
-**SAFETY: All discovery operations are strictly READ-ONLY. NEVER create, modify, or delete Azure resources. Only use list/get/read MCP tool operations. This skill is for observation and documentation only.**
+**SAFETY: All discovery operations are strictly READ-ONLY. NEVER execute `az` commands that create, modify, or delete resources. Only use `show`, `list`, `get`, and `query` operations. This skill is for observation and documentation only.**
 
 ## When to Use
 
-- Documenting existing Azure infrastructure for team onboarding
-- Onboarding to a new Azure environment you haven't worked in before
-- Audit and compliance — generating an inventory of deployed resources
-- Architecture reviews — visualizing how resources connect
+- Tracing all dependencies of a specific Azure resource (networking, security, identity, monitoring)
+- Documenting how a container app, VM, AKS cluster, or other resource connects to its environment
+- Generating topology diagrams showing resource relationships
+- Auditing networking and security configuration (VNets, NSGs, private endpoints)
 
 ## Prerequisites
 
-- Azure credentials configured (e.g., `az login` or service principal)
+- **Azure CLI** (`az`) installed and authenticated (`az login`)
 - **Reader** role (minimum) on the target subscription or resource group
-- Azure MCP tools available and loaded (`mcp__azure__*`)
+- **Azure Resource Graph** extension: required for `az graph query`. Usually auto-installed on first use; if not, the user must run `az extension add --name resource-graph`
+- **Graphviz** (optional): `dot` command for rendering complex topologies. Install via `brew install graphviz` (macOS) or `apt install graphviz` (Linux). Falls back to Mermaid if not available.
 
-## Resource Taxonomy
+## Resource Graph Queries
 
-### Categories and Azure MCP Tools
+### Find Resource by Name
 
-| Category | MCP Tool | Resource Types |
-|----------|----------|----------------|
-| Compute | `appservice` | `Microsoft.Web/sites`, `Microsoft.Web/serverfarms` |
-| Compute | `functionapp` | `Microsoft.Web/sites` (kind: functionapp) |
-| Containers | `aks` | `Microsoft.ContainerService/managedClusters` |
-| Containers | `acr` | `Microsoft.ContainerRegistry/registries` |
-| Security | `keyvault` | `Microsoft.KeyVault/vaults` |
-| Databases | `sql` | `Microsoft.Sql/servers`, `Microsoft.Sql/servers/databases` |
-| Databases | `cosmos` | `Microsoft.DocumentDB/databaseAccounts` |
-| Databases | `postgres` | `Microsoft.DBforPostgreSQL/flexibleServers` |
-| Databases | `mysql` | `Microsoft.DBforMySQL/flexibleServers` |
-| Databases | `redis` | `Microsoft.Cache/Redis` |
-| Messaging | `eventhubs` | `Microsoft.EventHub/namespaces` |
-| Messaging | `servicebus` | `Microsoft.ServiceBus/namespaces` |
-| Messaging | `eventgrid` | `Microsoft.EventGrid/topics` |
-| Messaging | `signalr` | `Microsoft.SignalRService/SignalR` |
-| Storage | `storage` | `Microsoft.Storage/storageAccounts` |
-| Monitoring | `applicationinsights` | `Microsoft.Insights/components` |
-| Monitoring | `monitor` | `Microsoft.OperationalInsights/workspaces`, alerts |
-| Configuration | `appconfig` | `Microsoft.AppConfiguration/configurationStores` |
-| Search | `search` | `Microsoft.Search/searchServices` |
+```bash
+az graph query -q "resources | where name =~ '<resource-name>'" --first 10 -o json
+```
 
-> **Note:** The `role`, `quota`, and `applens` Azure MCP tools exist but are operational rather than architectural — they are out of scope for basic resource discovery.
+### Find Resource with Subscription Filter
 
-### Type Shorthand for Diagram Labels
+```bash
+az graph query -q "resources | where name =~ '<resource-name>'" --subscriptions "<subscription-id>" --first 10 -o json
+```
+
+### Find Private Endpoints for a Resource
+
+```bash
+az graph query -q "resources | where type =~ 'microsoft.network/privateendpoints' | mv-expand conn = properties.privateLinkServiceConnections | where conn.properties.privateLinkServiceId =~ '<resource-id>'" --first 50 -o json
+```
+
+### Find NSGs in a Resource Group
+
+```bash
+az graph query -q "resources | where type =~ 'microsoft.network/networksecuritygroups' and resourceGroup =~ '<resource-group>'" --first 20 -o json
+```
+
+### Find Managed Identity Role Assignments
+
+```bash
+az role assignment list --assignee "<principal-id>" -o json
+```
+
+### Find Resources by Tag
+
+```bash
+az graph query -q "resources | where tags['<tag-key>'] =~ '<tag-value>'" --first 50 -o json
+```
+
+## Dependency Tracers by Resource Type
+
+Each tracer lists the `az` CLI commands to execute. Commands that fail (permission denied, resource not found) should be noted in the trace output but should not halt the overall trace.
+
+---
+
+### Container App Tracer
+
+**Target type:** `Microsoft.App/containerApps`
+
+**Key dependencies:** Container App Environment, VNet/Subnet, NSG, ACR, Managed Identity, Key Vault, Log Analytics, Private Endpoints
+
+#### Commands
+
+```bash
+# 1. Get container app details (includes identity, ingress, registry, secrets)
+az containerapp show --name "<name>" --resource-group "<rg>" -o json
+
+# 2. Get the Container App Environment
+az containerapp env show --name "<env-name>" --resource-group "<env-rg>" -o json
+# Extract: vnetConfiguration.infrastructureSubnetId, appLogsConfiguration.logAnalyticsConfiguration.customerId
+
+# 3. Get VNet and Subnet from environment's subnet ID
+az network vnet subnet show --ids "<subnet-id>" -o json
+# Extract: addressPrefix, networkSecurityGroup.id, routeTable.id
+
+# 4. Get the parent VNet
+az network vnet show --ids "<vnet-id>" -o json
+# Extract: addressSpace.addressPrefixes, subnets
+
+# 5. Get NSG rules (if NSG attached to subnet)
+az network nsg show --ids "<nsg-id>" -o json
+az network nsg rule list --nsg-name "<nsg-name>" --resource-group "<nsg-rg>" -o json
+
+# 6. Get ACR (from container image registry)
+# Parse registry from container image field (e.g., myacr.azurecr.io/app:tag → myacr)
+az acr show --name "<acr-name>" -o json
+
+# 7. Get managed identity details
+# If systemAssigned: principal ID is in the containerapp show output
+# If userAssigned: get each identity
+az identity show --ids "<user-assigned-identity-id>" -o json
+
+# 8. Get role assignments for the managed identity
+az role assignment list --assignee "<principal-id>" --all -o json
+
+# 9. Get Key Vault references (from secrets in containerapp show output)
+# Parse Key Vault URI from secret references (e.g., https://myvault.vault.azure.net/secrets/...)
+az keyvault show --name "<vault-name>" -o json
+
+# 10. Get Log Analytics workspace (from environment's log config)
+az monitor log-analytics workspace show --workspace-name "<workspace-name>" --resource-group "<la-rg>" -o json
+
+# 11. Find private endpoints targeting this resource
+az graph query -q "resources | where type =~ 'microsoft.network/privateendpoints' | mv-expand conn = properties.privateLinkServiceConnections | where conn.properties.privateLinkServiceId =~ '<container-app-id>'" --first 20 -o json
+
+# 12. Get diagnostic settings
+az monitor diagnostic-settings list --resource "<container-app-id>" -o json
+```
+
+---
+
+### Virtual Machine Tracer
+
+**Target type:** `Microsoft.Compute/virtualMachines`
+
+**Key dependencies:** NIC, VNet/Subnet, NSG, Public IP, Disks, Load Balancer, Availability Set, VM Extensions
+
+#### Commands
+
+```bash
+# 1. Get VM details (includes identity, OS, hardware profile)
+az vm show --name "<name>" --resource-group "<rg>" -o json
+# Extract: networkProfile.networkInterfaces, storageProfile.osDisk, storageProfile.dataDisks,
+#          identity, availabilitySet, hardwareProfile.vmSize
+
+# 2. Get each NIC
+az network nic show --ids "<nic-id>" -o json
+# Extract: ipConfigurations[].subnet.id, ipConfigurations[].publicIPAddress.id,
+#          networkSecurityGroup.id, ipConfigurations[].loadBalancerBackendAddressPools
+
+# 3. Get subnet from NIC
+az network vnet subnet show --ids "<subnet-id>" -o json
+# Extract: addressPrefix, networkSecurityGroup.id, routeTable.id
+
+# 4. Get parent VNet
+az network vnet show --ids "<vnet-id>" -o json
+
+# 5. Get NSG (from NIC or subnet)
+az network nsg show --ids "<nsg-id>" -o json
+az network nsg rule list --nsg-name "<nsg-name>" --resource-group "<nsg-rg>" -o json
+
+# 6. Get public IP (if assigned)
+az network public-ip show --ids "<pip-id>" -o json
+# Extract: ipAddress, publicIPAllocationMethod, dnsSettings
+
+# 7. Get load balancer (if NIC is in a backend pool)
+az network lb show --ids "<lb-id>" -o json
+# Extract: frontendIPConfigurations, backendAddressPools, loadBalancingRules
+
+# 8. Get OS disk and data disks
+az disk show --ids "<disk-id>" -o json
+# Extract: diskSizeGb, sku.name, encryption
+
+# 9. Get availability set (if configured)
+az vm availability-set show --ids "<avset-id>" -o json
+
+# 10. Get VM extensions
+az vm extension list --vm-name "<name>" --resource-group "<rg>" -o json
+
+# 11. Get managed identity role assignments
+az role assignment list --assignee "<principal-id>" --all -o json
+
+# 12. Get diagnostic settings
+az monitor diagnostic-settings list --resource "<vm-id>" -o json
+
+# 13. Find private endpoints in the same subnet
+az graph query -q "resources | where type =~ 'microsoft.network/privateendpoints' | mv-expand subnet = properties.subnet | where subnet.id =~ '<subnet-id>'" --first 20 -o json
+```
+
+---
+
+### AKS Cluster Tracer
+
+**Target type:** `Microsoft.ContainerService/managedClusters`
+
+**Key dependencies:** VNet/Subnet, NSG, ACR, Managed Identity, Key Vault, Load Balancer, Log Analytics, MC_ resource group, Private DNS
+
+#### Commands
+
+```bash
+# 1. Get AKS cluster details
+az aks show --name "<name>" --resource-group "<rg>" -o json
+# Extract: agentPoolProfiles[].vnetSubnetID, networkProfile, identity,
+#          addonProfiles, nodeResourceGroup, privateFqdn, apiServerAccessProfile
+
+# 2. Get the MC_ (managed/node) resource group resources
+az resource list --resource-group "<nodeResourceGroup>" -o json
+# This contains load balancers, public IPs, route tables, NSGs managed by AKS
+
+# 3. Get VNet and Subnet (from agent pool subnet ID)
+az network vnet subnet show --ids "<subnet-id>" -o json
+az network vnet show --ids "<vnet-id>" -o json
+
+# 4. Get NSG (from subnet or MC_ resource group)
+az network nsg show --ids "<nsg-id>" -o json
+az network nsg rule list --nsg-name "<nsg-name>" --resource-group "<nsg-rg>" -o json
+
+# 5. Get load balancer (from MC_ resource group)
+az network lb list --resource-group "<nodeResourceGroup>" -o json
+
+# 6. Get ACR attachment (check role assignments for acrPull)
+az role assignment list --assignee "<aks-identity-principal-id>" --role acrpull --all -o json
+# Parse ACR resource ID from scope field
+
+# 7. Get ACR details
+az acr show --name "<acr-name>" -o json
+
+# 8. Get managed identity details
+az identity show --ids "<kubelet-identity-id>" -o json
+az role assignment list --assignee "<kubelet-principal-id>" --all -o json
+
+# 9. Get Key Vault (from addon profiles — azureKeyvaultSecretsProvider)
+# Parse Key Vault name from addon config if present
+az keyvault show --name "<vault-name>" -o json
+
+# 10. Get Log Analytics workspace (from addon profiles — omsagent)
+# Parse workspace ID from omsagent addon config
+az monitor log-analytics workspace show --ids "<workspace-id>" -o json
+
+# 11. Get private DNS zone (for private clusters)
+az network private-dns zone list --resource-group "<nodeResourceGroup>" -o json
+
+# 12. Get route table (from subnet)
+az network route-table show --ids "<route-table-id>" -o json
+
+# 13. Get diagnostic settings
+az monitor diagnostic-settings list --resource "<aks-id>" -o json
+```
+
+---
+
+### App Service Tracer
+
+**Target type:** `Microsoft.Web/sites` (where kind does NOT contain `functionapp`)
+
+**Key dependencies:** App Service Plan, VNet integration, Private Endpoints, Key Vault refs, Managed Identity, App Insights, Database connections
+
+#### Commands
+
+```bash
+# 1. Get web app details
+az webapp show --name "<name>" --resource-group "<rg>" -o json
+# Extract: serverFarmId, identity, httpsOnly, kind, state
+
+# 2. Get App Service Plan
+az appservice plan show --ids "<server-farm-id>" -o json
+# Extract: sku, numberOfWorkers, reserved (Linux), zoneRedundant
+
+# 3. Get app settings (contains connection strings, Key Vault refs, App Insights key)
+az webapp config appsettings list --name "<name>" --resource-group "<rg>" -o json
+# Look for: APPINSIGHTS_INSTRUMENTATIONKEY, APPLICATIONINSIGHTS_CONNECTION_STRING,
+#           @Microsoft.KeyVault(...) references, *CONNSTR*, *DATABASE*, *REDIS*
+
+# 4. Get connection strings
+az webapp config connection-string list --name "<name>" --resource-group "<rg>" -o json
+
+# 5. Get VNet integration
+az webapp vnet-integration list --name "<name>" --resource-group "<rg>" -o json
+# Extract: vnetResourceId, subnetResourceId
+
+# 6. Get subnet and VNet (from VNet integration)
+az network vnet subnet show --ids "<subnet-id>" -o json
+az network vnet show --ids "<vnet-id>" -o json
+
+# 7. Find private endpoints targeting this app
+az graph query -q "resources | where type =~ 'microsoft.network/privateendpoints' | mv-expand conn = properties.privateLinkServiceConnections | where conn.properties.privateLinkServiceId =~ '<webapp-id>'" --first 20 -o json
+
+# 8. Get Key Vault (from @Microsoft.KeyVault references in app settings)
+az keyvault show --name "<vault-name>" -o json
+
+# 9. Get App Insights (from instrumentation key or connection string)
+az monitor app-insights component show --resource-group "<rg>" -o json
+# Match by instrumentationKey
+
+# 10. Get managed identity role assignments
+az role assignment list --assignee "<principal-id>" --all -o json
+
+# 11. Get diagnostic settings
+az monitor diagnostic-settings list --resource "<webapp-id>" -o json
+
+# 12. Get custom domains and SSL bindings
+az webapp config hostname list --webapp-name "<name>" --resource-group "<rg>" -o json
+az webapp config ssl list --resource-group "<rg>" -o json
+```
+
+---
+
+### Function App Tracer
+
+**Target type:** `Microsoft.Web/sites` (where kind contains `functionapp`)
+
+**Key dependencies:** Same as App Service + Event Hub/Service Bus triggers, Storage Account
+
+#### Commands
+
+Run all App Service Tracer commands above, plus:
+
+```bash
+# 1. Get function app details (superset of webapp show)
+az functionapp show --name "<name>" --resource-group "<rg>" -o json
+
+# 2. Get app settings (look for trigger bindings)
+az functionapp config appsettings list --name "<name>" --resource-group "<rg>" -o json
+# Additional keys to look for:
+#   AzureWebJobsStorage — linked Storage Account
+#   AzureWebJobsEventHub*, EventHubConnection* — Event Hub triggers
+#   AzureWebJobsServiceBus*, ServiceBusConnection* — Service Bus triggers
+#   AzureWebJobsDashboard — diagnostic storage
+
+# 3. Get Storage Account (from AzureWebJobsStorage)
+# Parse account name from connection string or setting
+az storage account show --name "<storage-account-name>" -o json
+
+# 4. Get Event Hub namespace (from trigger connection string)
+az eventhubs namespace show --name "<namespace>" --resource-group "<eh-rg>" -o json
+
+# 5. Get Service Bus namespace (from trigger connection string)
+az servicebus namespace show --name "<namespace>" --resource-group "<sb-rg>" -o json
+```
+
+---
+
+### Generic Tracer
+
+**Target type:** Any resource type not covered by the tracers above
+
+#### Commands
+
+```bash
+# 1. Get full resource details
+az resource show --ids "<resource-id>" -o json
+
+# 2. Find private endpoints targeting this resource
+az graph query -q "resources | where type =~ 'microsoft.network/privateendpoints' | mv-expand conn = properties.privateLinkServiceConnections | where conn.properties.privateLinkServiceId =~ '<resource-id>'" --first 20 -o json
+
+# 3. Get managed identity (if resource has identity property)
+# Parse principalId from resource's identity field
+az role assignment list --assignee "<principal-id>" --all -o json
+
+# 4. Get diagnostic settings
+az monitor diagnostic-settings list --resource "<resource-id>" -o json
+
+# 5. Find resources in the same resource group (for context)
+az resource list --resource-group "<rg>" --resource-type "<same-type-or-related>" -o json
+```
+
+---
+
+## Networking Detail Collectors
+
+Utility commands for enriching dependency metadata with networking details. Use these when a tracer discovers a networking resource.
+
+### VNet Details
+
+```bash
+az network vnet show --ids "<vnet-id>" -o json
+# Collect: name, addressSpace.addressPrefixes, subnets[].name, subnets[].addressPrefix, location
+```
+
+### Subnet Details
+
+```bash
+az network vnet subnet show --ids "<subnet-id>" -o json
+# Collect: name, addressPrefix, networkSecurityGroup.id, routeTable.id,
+#          privateEndpointNetworkPolicies, delegations[].serviceName
+```
+
+### NSG Rule Details
+
+```bash
+az network nsg rule list --nsg-name "<nsg-name>" --resource-group "<nsg-rg>" --include-default -o json
+# Collect per rule: name, priority, direction, access, protocol, sourceAddressPrefix,
+#                   destinationAddressPrefix, destinationPortRange
+```
+
+### Private Endpoint Details
+
+```bash
+az network private-endpoint show --ids "<pe-id>" -o json
+# Collect: name, subnet.id, privateLinkServiceConnections[].privateLinkServiceId,
+#          customDnsConfigs[].fqdn, customDnsConfigs[].ipAddresses
+```
+
+### Private DNS Zone Details
+
+```bash
+az network private-dns zone show --name "<zone-name>" --resource-group "<rg>" -o json
+az network private-dns record-set list --zone-name "<zone-name>" --resource-group "<rg>" -o json
+```
+
+### Public IP Details
+
+```bash
+az network public-ip show --ids "<pip-id>" -o json
+# Collect: ipAddress, publicIPAllocationMethod, dnsSettings.fqdn, sku.name
+```
+
+### Route Table Details
+
+```bash
+az network route-table show --ids "<route-table-id>" -o json
+az network route-table route list --route-table-name "<rt-name>" --resource-group "<rg>" -o json
+```
+
+### Load Balancer Details
+
+```bash
+az network lb show --ids "<lb-id>" -o json
+# Collect: frontendIPConfigurations[].privateIPAddress,
+#          frontendIPConfigurations[].publicIPAddress.id,
+#          backendAddressPools[].name, loadBalancingRules[].name
+```
+
+## Type Shorthand for Diagram Labels
 
 | Resource Type | Shorthand |
 |---------------|-----------|
+| Container App | `CA` |
+| Container App Environment | `CAE` |
 | Web App | `Web` |
 | Function App | `Func` |
 | App Service Plan | `ASP` |
+| Virtual Machine | `VM` |
 | AKS Cluster | `AKS` |
 | Container Registry | `ACR` |
 | Key Vault | `KV` |
@@ -68,354 +446,303 @@ Patterns for discovering Azure resources, mapping relationships, and generating 
 | Redis Cache | `Redis` |
 | Event Hub | `EH` |
 | Service Bus | `SB` |
-| Event Grid | `EG` |
-| SignalR | `SignalR` |
 | Storage Account | `Storage` |
 | App Insights | `AI` |
 | Log Analytics | `LA` |
-| App Configuration | `AppConfig` |
-| Search Service | `Search` |
+| VNet | `VNet` |
+| Subnet | `Subnet` |
+| NSG | `NSG` |
+| Private Endpoint | `PE` |
+| Public IP | `PIP` |
+| Load Balancer | `LB` |
+| Managed Identity | `MI` |
+| Private DNS Zone | `DNS` |
+| Route Table | `RT` |
+| NIC | `NIC` |
+| Disk | `Disk` |
+| Availability Set | `AVSet` |
 
-## Relationship Mapping
-
-### How to Infer Connections
-
-Relationships between Azure resources are typically inferred from configuration, not explicit links. Use these patterns:
-
-#### App Service / Function App → Database
-
-Look for connection strings and app settings containing:
-- `SQLCONNSTR_*`, `SQLAZURECONNSTR_*` → SQL Database
-- `CUSTOMCONNSTR_*` → Various databases
-- App settings with `ConnectionString`, `DatabaseUrl`, `PGHOST`, `MYSQL_HOST`
-- Cosmos DB: settings with `CosmosDb`, `DocumentDb`, or Cosmos endpoint URLs
-
-#### App Service / Function App → Key Vault
-
-Look for:
-- App settings with `@Microsoft.KeyVault(SecretUri=...)` references
-- Managed identity enabled + Key Vault access policies
-- Settings containing `KeyVault` or `Vault` in name
-
-#### App Service → Application Insights
-
-Look for:
-- `APPINSIGHTS_INSTRUMENTATIONKEY` in app settings
-- `APPLICATIONINSIGHTS_CONNECTION_STRING` in app settings
-- Matching instrumentation key values
-
-#### AKS → ACR
-
-Look for:
-- ACR attached to AKS via `acrPull` role assignment
-- AKS agent pool configured with ACR login server
-
-#### Function App → Event Hubs / Service Bus
-
-Look for:
-- Trigger bindings referencing Event Hub or Service Bus connection strings
-- App settings with `EventHub`, `ServiceBus` in name
-- `AzureWebJobsEventHub*`, `AzureWebJobsServiceBus*` settings
-
-#### Resources → Storage
-
-Look for:
-- `AzureWebJobsStorage` in function app settings
-- Diagnostic settings targeting storage accounts
-- App settings referencing blob/queue/table endpoints
-
-#### Resources → VNet
-
-Look for:
-- VNet integration configured on App Service
-- AKS cluster with VNet/subnet configuration
-- Private endpoints associated with resources
-
-#### App Service / Function App → App Configuration
-
-Look for:
-- App settings with `AppConfigurationEndpoint` or `ConnectionStrings:AppConfig`
-- Settings referencing `*.azconfig.io` endpoints
-
-#### Resources → Managed Identity
-
-Look for:
-- `identity.type` set to `SystemAssigned` or `UserAssigned` on any resource
-- User-assigned identity resource IDs in `identity.userAssignedIdentities`
-
-#### Tag-Based Inference
-
-Look for matching tags across resources to infer logical grouping:
-- `app:` or `application:` — resources belonging to the same application
-- `project:` — resources in the same project
-- `environment:` or `env:` — resources sharing a deployment environment
-
-### Relationship Labels for Diagrams
+## Relationship Labels for Diagrams
 
 | Relationship | Arrow Label |
 |-------------|-------------|
-| App → SQL Database | `SQL connection` |
-| App → Cosmos DB | `Cosmos connection` |
-| App → PostgreSQL | `PgSQL connection` |
+| Resource → VNet/Subnet | `runs in` |
+| Subnet → VNet | `part of` |
+| Resource → NSG | `secured by` |
+| NSG → Subnet | `filtered by` |
+| Resource → Private Endpoint | `connected via` |
+| Private Endpoint → Private DNS | `resolves` |
+| Resource → Public IP | `exposed at` |
+| Resource → Load Balancer | `balanced by` |
+| Route Table → Subnet | `routes for` |
+| Resource → Managed Identity | `authenticates as` |
+| Resource → Key Vault | `secrets from` |
+| Resource → RBAC Role | `authorized by` |
+| AKS → ACR | `pulls images` |
+| App → Database | `reads/writes` |
 | App → Redis | `cache` |
-| App → Key Vault | `secrets` |
-| App → App Insights | `telemetry` |
 | App → Storage | `blob/queue` |
-| AKS → ACR | `image pull` |
-| Function → Event Hub | `trigger` |
-| Function → Service Bus | `trigger` |
-| App → SignalR | `real-time` |
-| Any → Log Analytics | `diagnostics` |
-| Any → Event Grid | `events` |
-| App → App Configuration | `config` |
+| App → App Insights | `telemetry` |
+| App → Log Analytics | `diagnostics` |
+| Function → Event Hub | `triggered by` |
+| Function → Service Bus | `triggered by` |
+| Function → Storage | `bindings` |
+| Container App → CAE | `hosted by` |
 
 ## Mermaid Diagram Templates
 
 ### Color Scheme
 
-Apply these fill colors by category:
-
 ```
-Compute:    fill:#fff4e1,stroke:#f59e0b,color:#000
-Containers: fill:#f3e5f5,stroke:#9c27b0,color:#000
-Databases:  fill:#e8f5e9,stroke:#4caf50,color:#000
-Storage:    fill:#fce4ec,stroke:#e91e63,color:#000
-Security:   fill:#ffebee,stroke:#f44336,color:#000
-Messaging:  fill:#e1f5ff,stroke:#2196f3,color:#000
-Monitoring: fill:#fff9c4,stroke:#ffc107,color:#000
-Configuration: fill:#f3e5f5,stroke:#7b1fa2,color:#000
-Search:        fill:#e0f2f1,stroke:#009688,color:#000
-Networking:    fill:#e1f5ff,stroke:#2196f3,color:#000
+Target:        fill:#1a73e8,stroke:#0d47a1,color:#fff,stroke-width:3px
+Networking:    fill:#e1f5fe,stroke:#0288d1,color:#000
+Security:      fill:#ffebee,stroke:#c62828,color:#000
+Identity:      fill:#fce4ec,stroke:#e91e63,color:#000
+Data:          fill:#e8f5e9,stroke:#2e7d32,color:#000
+Monitoring:    fill:#fff9c4,stroke:#f9a825,color:#000
+Compute:       fill:#fff3e0,stroke:#ef6c00,color:#000
+Containers:    fill:#f3e5f5,stroke:#7b1fa2,color:#000
+Storage:       fill:#fce4ec,stroke:#e91e63,color:#000
+Messaging:     fill:#e1f5ff,stroke:#2196f3,color:#000
 ```
 
-### Template 1: Multi-Tier Architecture
+### Template: Resource Dependency Topology
 
-Use for web applications with frontend, backend, and data layers.
+Use `flowchart TB` for dependency topologies. The target resource is at the top, dependencies flow downward grouped by category.
 
 ```mermaid
 flowchart TB
-    subgraph Compute["Compute"]
-        WEB["web-app<br/>Web | S1"]
-        FUNC["func-processor<br/>Func | Y1"]
+    TARGET["<b>my-container-app</b><br/>CA | Consumption"]
+
+    subgraph Networking["Networking"]
+        VNET["prod-vnet<br/>VNet | 10.0.0.0/16"]
+        SUBNET["app-subnet<br/>Subnet | 10.0.1.0/24"]
+        NSG["app-nsg<br/>NSG"]
+        PE["pe-keyvault<br/>PE"]
     end
 
-    subgraph Data["Databases"]
-        SQL["sql-main<br/>SQLDB | S2"]
-        REDIS["cache-01<br/>Redis | C1"]
-    end
-
-    subgraph Security["Security"]
-        KV["kv-prod<br/>KV | Standard"]
+    subgraph Security["Security & Identity"]
+        MI["app-identity<br/>MI | UserAssigned"]
+        KV["prod-keyvault<br/>KV | Standard"]
     end
 
     subgraph Monitoring["Monitoring"]
-        AI["insights-prod<br/>AI"]
+        LA["prod-workspace<br/>LA"]
     end
 
-    WEB -->|SQL connection| SQL
-    WEB -->|cache| REDIS
-    WEB -->|secrets| KV
-    WEB -->|telemetry| AI
-    FUNC -->|SQL connection| SQL
-
-    style WEB fill:#fff4e1,stroke:#f59e0b,color:#000
-    style FUNC fill:#fff4e1,stroke:#f59e0b,color:#000
-    style SQL fill:#e8f5e9,stroke:#4caf50,color:#000
-    style REDIS fill:#e8f5e9,stroke:#4caf50,color:#000
-    style KV fill:#ffebee,stroke:#f44336,color:#000
-    style AI fill:#fff9c4,stroke:#ffc107,color:#000
-```
-
-### Template 2: Container Architecture
-
-Use for AKS and container-based environments.
-
-```mermaid
-flowchart LR
     subgraph Containers["Containers"]
-        AKS["aks-cluster<br/>AKS | Standard_D4s"]
-        ACR["registry<br/>ACR | Premium"]
+        CAE["prod-env<br/>CAE"]
+        ACR["prodregistry<br/>ACR | Premium"]
     end
 
-    subgraph Data["Databases"]
-        COSMOS["cosmosdb<br/>Cosmos | Serverless"]
-        PG["pgdb<br/>PgSQL | GP_Gen5_2"]
-    end
+    TARGET -->|hosted by| CAE
+    TARGET -->|pulls images| ACR
+    TARGET -->|authenticates as| MI
+    TARGET -->|secrets from| KV
+    TARGET -->|telemetry| LA
+    CAE -->|runs in| SUBNET
+    SUBNET -->|part of| VNET
+    SUBNET -->|filtered by| NSG
+    KV -->|connected via| PE
+    PE -->|runs in| SUBNET
 
-    subgraph Security["Security"]
-        KV["keyvault<br/>KV | Standard"]
-    end
-
-    subgraph Messaging["Messaging"]
-        SB["servicebus<br/>SB | Standard"]
-    end
-
-    ACR -->|image pull| AKS
-    AKS -->|Cosmos connection| COSMOS
-    AKS -->|PgSQL connection| PG
-    AKS -->|secrets| KV
-    AKS -->|messaging| SB
-
-    style AKS fill:#f3e5f5,stroke:#9c27b0,color:#000
-    style ACR fill:#f3e5f5,stroke:#9c27b0,color:#000
-    style COSMOS fill:#e8f5e9,stroke:#4caf50,color:#000
-    style PG fill:#e8f5e9,stroke:#4caf50,color:#000
-    style KV fill:#ffebee,stroke:#f44336,color:#000
-    style SB fill:#e1f5ff,stroke:#2196f3,color:#000
+    style TARGET fill:#1a73e8,stroke:#0d47a1,color:#fff,stroke-width:3px
+    style VNET fill:#e1f5fe,stroke:#0288d1,color:#000
+    style SUBNET fill:#e1f5fe,stroke:#0288d1,color:#000
+    style NSG fill:#ffebee,stroke:#c62828,color:#000
+    style PE fill:#e1f5fe,stroke:#0288d1,color:#000
+    style MI fill:#fce4ec,stroke:#e91e63,color:#000
+    style KV fill:#ffebee,stroke:#c62828,color:#000
+    style LA fill:#fff9c4,stroke:#f9a825,color:#000
+    style CAE fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    style ACR fill:#f3e5f5,stroke:#7b1fa2,color:#000
 ```
 
-### Template 3: Event-Driven Architecture
+### Graphviz DOT Template: Complex Topology
 
-Use for function apps with messaging and event processing.
+Use for topologies with more than 15 nodes. Generates a DOT source file that can be rendered to SVG with `dot -Tsvg`.
 
-```mermaid
-flowchart LR
-    subgraph Messaging["Messaging"]
-        EH["eventhub<br/>EH | Standard"]
-        SB["servicebus<br/>SB | Standard"]
-        EG["eventgrid<br/>EG"]
-    end
+```dot
+digraph topology {
+    rankdir=TB;
+    fontname="Helvetica";
+    node [fontname="Helvetica", fontsize=10, shape=box, style="filled,rounded"];
+    edge [fontname="Helvetica", fontsize=9];
 
-    subgraph Compute["Compute"]
-        FUNC1["func-ingest<br/>Func | Y1"]
-        FUNC2["func-process<br/>Func | Y1"]
-    end
+    // Target resource (emphasized)
+    target [label="my-aks-cluster\nAKS | Standard_D4s_v3", fillcolor="#1a73e8", fontcolor="white", penwidth=3];
 
-    subgraph Data["Databases"]
-        COSMOS["cosmosdb<br/>Cosmos | Serverless"]
-        STORAGE["blobstore<br/>Storage | LRS"]
-    end
+    // Networking cluster
+    subgraph cluster_networking {
+        label="Networking";
+        style=filled;
+        fillcolor="#f5f5f5";
+        color="#0288d1";
+        vnet [label="prod-vnet\nVNet | 10.0.0.0/16", fillcolor="#e1f5fe", color="#0288d1"];
+        subnet [label="aks-subnet\nSubnet | 10.0.2.0/24", fillcolor="#e1f5fe", color="#0288d1"];
+        nsg [label="aks-nsg\nNSG", fillcolor="#ffebee", color="#c62828"];
+        lb [label="kubernetes\nLB | Standard", fillcolor="#e1f5fe", color="#0288d1"];
+        rt [label="aks-rt\nRT", fillcolor="#e1f5fe", color="#0288d1"];
+    }
 
-    EH -->|trigger| FUNC1
-    EG -->|trigger| FUNC2
-    FUNC1 -->|Cosmos connection| COSMOS
-    FUNC2 -->|blob/queue| STORAGE
-    FUNC1 -->|messaging| SB
+    // Security cluster
+    subgraph cluster_security {
+        label="Security & Identity";
+        style=filled;
+        fillcolor="#f5f5f5";
+        color="#c62828";
+        mi [label="aks-agentpool\nMI | SystemAssigned", fillcolor="#fce4ec", color="#e91e63"];
+        kv [label="prod-keyvault\nKV | Standard", fillcolor="#ffebee", color="#c62828"];
+    }
 
-    style EH fill:#e1f5ff,stroke:#2196f3,color:#000
-    style SB fill:#e1f5ff,stroke:#2196f3,color:#000
-    style EG fill:#e1f5ff,stroke:#2196f3,color:#000
-    style FUNC1 fill:#fff4e1,stroke:#f59e0b,color:#000
-    style FUNC2 fill:#fff4e1,stroke:#f59e0b,color:#000
-    style COSMOS fill:#e8f5e9,stroke:#4caf50,color:#000
-    style STORAGE fill:#fce4ec,stroke:#e91e63,color:#000
+    // Containers cluster
+    subgraph cluster_containers {
+        label="Containers";
+        style=filled;
+        fillcolor="#f5f5f5";
+        color="#7b1fa2";
+        acr [label="prodregistry\nACR | Premium", fillcolor="#f3e5f5", color="#7b1fa2"];
+    }
+
+    // Monitoring cluster
+    subgraph cluster_monitoring {
+        label="Monitoring";
+        style=filled;
+        fillcolor="#f5f5f5";
+        color="#f9a825";
+        la [label="prod-workspace\nLA", fillcolor="#fff9c4", color="#f9a825"];
+    }
+
+    // Edges
+    target -> subnet [label="runs in"];
+    target -> acr [label="pulls images"];
+    target -> mi [label="authenticates as"];
+    target -> kv [label="secrets from"];
+    target -> la [label="diagnostics"];
+    target -> lb [label="balanced by"];
+    subnet -> vnet [label="part of"];
+    subnet -> nsg [label="filtered by"];
+    subnet -> rt [label="routes for"];
+}
+```
+
+Render with:
+
+```bash
+dot -Tsvg topology.dot -o topology.svg
 ```
 
 ### Diagram Construction Rules
 
-1. **Node IDs**: Use uppercase shorthand (e.g., `WEB`, `SQL`, `KV`). For duplicates, append a number (`SQL1`, `SQL2`)
-2. **Node labels**: `"resource-name<br/>Shorthand | SKU/Tier"`
-3. **Subgraphs**: Group by category, use category name as subgraph label
-4. **Arrows**: `-->|label|` with relationship label from the table above
-5. **Style lines**: One `style` line per node, using the category color scheme
-6. **Omit empty categories**: Don't create subgraphs for categories with no resources
-7. **Readability**: For 20+ resources, consider splitting into multiple diagrams or focusing on one resource group
+1. **Target node**: Always first, visually emphasized with bold border and distinct fill (`#1a73e8`)
+2. **Node IDs**: Use uppercase shorthand (e.g., `VNET`, `NSG`, `KV`). For duplicates, append a number (`NSG1`, `NSG2`)
+3. **Node labels**: `"resource-name<br/>Shorthand | SKU/Tier"` (Mermaid) or `"resource-name\nShorthand | SKU/Tier"` (DOT)
+4. **Subgraphs/Clusters**: Group by category (Networking, Security & Identity, Monitoring, Containers, Data, etc.)
+5. **Edges**: Use relationship labels from the table above
+6. **Style lines**: One `style` line per node (Mermaid) or `fillcolor`/`color` attributes (DOT)
+7. **Omit empty categories**: Don't create subgraphs for categories with no resources
+8. **Format selection**: Mermaid for ≤15 nodes, Graphviz DOT for >15 nodes (fall back to Mermaid if `dot` not installed)
 
 ## Markdown Report Template
 
-Use this structure for the output report:
-
 ```markdown
-# Azure Infrastructure: {subscription-name}
+# Topology: {resource-name}
 
-> {YYYY-MM-DD} | {resource-group-names} | {total-count} resources
+> **{resource-type-shorthand}** | {location} | {resource-group} | {dependency-count} dependencies
 
-## Architecture
+## Topology Diagram
 
 ```mermaid
-{generated diagram}
+{generated mermaid diagram}
 ```
 
-## Resource Inventory
+{If Graphviz was used instead:}
+![Topology]({resource-name}-topology.svg)
 
-### Compute
+<details>
+<summary>DOT source</summary>
 
-| Name | Type | Location | SKU/Tier | Key Config |
-|------|------|----------|----------|------------|
-| {name} | Web App | {region} | {sku} | {runtime, OS, etc.} |
+```dot
+{generated dot source}
+```
+</details>
 
-### Containers
+## Target Resource
 
-| Name | Type | Location | SKU/Tier | Key Config |
-|------|------|----------|----------|------------|
-| {name} | AKS | {region} | {vm size} | {node count, k8s version} |
+| Property | Value |
+|----------|-------|
+| Name | {name} |
+| Type | {full azure type} |
+| Resource Group | {rg} |
+| Location | {location} |
+| Subscription | {subscription-name} ({subscription-id}) |
+| SKU / Tier | {sku or tier} |
+| Identity | {SystemAssigned / UserAssigned / None} |
 
-### Databases
+## Networking
 
-| Name | Type | Location | SKU/Tier | Key Config |
-|------|------|----------|----------|------------|
-| {name} | SQL Database | {region} | {sku} | {max size, collation} |
+| Resource | Type | Location | Details |
+|----------|------|----------|---------|
+| {vnet-name} | VNet | {location} | {address space} |
+| {subnet-name} | Subnet | — | {CIDR}, delegated to {service} |
+| {nsg-name} | NSG | {location} | {rule count} rules |
+| {pe-name} | Private Endpoint | {location} | → {target resource}, IP: {ip} |
+| {pip-name} | Public IP | {location} | {ip address}, {allocation method} |
+| {lb-name} | Load Balancer | {location} | {sku}, {frontend count} frontends |
 
-### Storage
+## NSG Rules
 
-| Name | Type | Location | SKU/Tier | Key Config |
-|------|------|----------|----------|------------|
-| {name} | Storage Account | {region} | {replication} | {kind, access tier} |
+| NSG | Priority | Direction | Access | Protocol | Source | Dest Port |
+|-----|----------|-----------|--------|----------|--------|-----------|
+| {nsg-name} | {priority} | {Inbound/Outbound} | {Allow/Deny} | {TCP/UDP/*} | {source prefix} | {dest port range} |
 
-### Security
+## Security & Identity
 
-| Name | Type | Location | SKU/Tier | Key Config |
-|------|------|----------|----------|------------|
-| {name} | Key Vault | {region} | {sku} | {soft delete, purge protection} |
+| Resource | Type | Details |
+|----------|------|---------|
+| {identity-name} | Managed Identity | {SystemAssigned/UserAssigned}, Principal: {id} |
+| {vault-name} | Key Vault | {sku}, {secret count} secrets referenced |
+| {role} | RBAC | {role name} on {scope} |
 
-### Messaging
+## Dependencies
 
-| Name | Type | Location | SKU/Tier | Key Config |
-|------|------|----------|----------|------------|
-| {name} | Event Hub | {region} | {sku} | {throughput units, partitions} |
-
-### Monitoring
-
-| Name | Type | Location | SKU/Tier | Key Config |
-|------|------|----------|----------|------------|
-| {name} | App Insights | {region} | — | {app type, retention} |
-
-### Configuration
-
-| Name | Type | Location | SKU/Tier | Key Config |
-|------|------|----------|----------|------------|
-| {name} | App Configuration | {region} | {sku} | {key count, encryption} |
-
-### Search
-
-| Name | Type | Location | SKU/Tier | Key Config |
-|------|------|----------|----------|------------|
-| {name} | Search | {region} | {sku} | {replica count, partition count} |
-
-## Relationships
-
-- {resource-a} → {resource-b}: {relationship description}
-- {resource-c} → {resource-d}: {relationship description}
+| Resource | Type | Resource Group | Relationship |
+|----------|------|---------------|-------------|
+| {name} | {shorthand} | {rg} | {relationship label} |
 
 ## Quick Reference
 
 | Property | Value |
 |----------|-------|
-| Subscription | {name} ({id}) |
-| Resource Group(s) | {names} |
-| Region(s) | {unique regions} |
-| Total Resources | {count} |
+| Target | {name} ({type shorthand}) |
+| Subscription | {subscription-name} |
+| Resource Group | {rg} |
+| Region | {location} |
+| Total Dependencies | {count} |
+| Traced At | {YYYY-MM-DD HH:MM UTC} |
 
-## Discovery Notes
+## Trace Notes
 
-- {tools that failed or returned errors}
-- {categories with no resources}
-- {permission issues encountered}
-- {resource types not covered by available MCP tools}
+- {commands that failed or returned errors}
+- {permissions issues encountered}
+- {resources that could not be resolved}
+- {assumptions made during tracing}
 ```
 
 ## Discovery Best Practices
 
-1. **Start small**: Discover one resource group first to validate output before scanning all groups
-2. **Use `--resource-group`**: Large subscriptions may have hundreds of resources — scope to specific groups
-3. **Permission errors**: Note them but don't halt. The user may only have read access to certain resource types
-4. **Empty categories**: Omit table sections for categories with zero resources to keep the report concise
-5. **Large environments**: For 50+ resources, consider splitting into multiple reports by resource group
-6. **MCP tool gaps**: Some Azure resource types don't have dedicated MCP tools. Note these as discovery gaps
-7. **Relationship confidence**: Connection string matching is reliable; VNet inference is best-effort
+1. **Start with Resource Graph**: Use `az graph query` to find the target — it searches across all types and subscriptions in one query
+2. **Cross-resource-group tracing**: Dependencies often live in different resource groups. Follow resource IDs regardless of RG
+3. **AKS MC_ resource group**: Always query both the user RG and the `nodeResourceGroup` (MC_*) for AKS clusters
+4. **Permission errors**: Note them in Trace Notes but don't halt. The user may have limited RBAC
+5. **Private endpoints**: Always check for private endpoints — they're critical for understanding how resources connect in private networks
+6. **NSG rules**: Include both custom and default rules (use `--include-default`) for a complete security picture
+7. **Parse connection strings carefully**: Extract server names, account names from connection string formats. Don't assume naming conventions
+8. **Large topologies**: For 30+ dependencies, consider tracing only the most critical categories (networking + security + identity)
 
 ## References
 
-- [Azure Resource Types](https://learn.microsoft.com/en-us/azure/templates/)
-- [Azure Architecture Center](https://learn.microsoft.com/en-us/azure/architecture/)
+- [Azure Resource Graph query language](https://learn.microsoft.com/en-us/azure/governance/resource-graph/concepts/query-language)
+- [Azure CLI reference](https://learn.microsoft.com/en-us/cli/azure/reference-index)
 - [Mermaid Flowchart Syntax](https://mermaid.js.org/syntax/flowchart.html)
+- [Graphviz DOT Language](https://graphviz.org/doc/info/lang.html)

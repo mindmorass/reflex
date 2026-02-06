@@ -123,7 +123,7 @@ plugins/reflex/
 | `/reflex:handoff` | Generate handoff document for session continuation |
 | `/reflex:statusline` | Configure the Reflex status line (on/off/status/color) |
 | `/reflex:summarize-transcript` | Summarize meeting transcript to structured notes |
-| `/reflex:azure-discover` | Discover and document Azure infrastructure with architecture diagrams |
+| `/reflex:azure-discover` | Trace Azure resource dependencies and generate topology diagrams |
 
 ## Agents
 

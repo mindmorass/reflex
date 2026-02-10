@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "templates": {
+    "jira-driven": {
+      "file": "templates/jira-driven.md",
+      "description": "Jira-driven development workflow with ticket tracking",
+      "tags": ["jira", "agile", "ticketing"]
+    },
+    "github-driven": {
+      "file": "templates/github-driven.md",
+      "description": "GitHub issue-driven development workflow with PR integration",
+      "tags": ["github", "issues", "pull-requests"]
+    },
+    "standalone": {
+      "file": "templates/standalone.md",
+      "description": "Standalone workflow without external ticket tracking",
+      "tags": ["standalone", "simple", "local"]
+    },
+    "custom": {
+      "file": "templates/custom.md",
+      "description": "Minimal scaffold for fully custom workflows",
+      "tags": ["custom", "blank"]
+    }
+  },
+  "steps": {
+    "fetch-jira-ticket": {
+      "file": "steps/fetch-jira-ticket.md",
+      "description": "Fetch and read a Jira ticket for requirements",
+      "category": "requirements"
+    },
+    "fetch-github-issue": {
+      "file": "steps/fetch-github-issue.md",
+      "description": "Fetch and read a GitHub issue for requirements",
+      "category": "requirements"
+    },
+    "understand-requirements": {
+      "file": "steps/understand-requirements.md",
+      "description": "Gather and clarify requirements from the user",
+      "category": "requirements"
+    },
+    "plan-implementation": {
+      "file": "steps/plan-implementation.md",
+      "description": "Enter plan mode and design implementation approach",
+      "category": "planning"
+    },
+    "implement-changes": {
+      "file": "steps/implement-changes.md",
+      "description": "Make code changes following project conventions",
+      "category": "implementation"
+    },
+    "self-review": {
+      "file": "steps/self-review.md",
+      "description": "Self-review all changes for correctness and security",
+      "category": "review"
+    },
+    "run-linting": {
+      "file": "steps/run-linting.md",
+      "description": "Run code linting and formatting checks",
+      "category": "validation"
+    },
+    "run-tests": {
+      "file": "steps/run-tests.md",
+      "description": "Run the project test suite",
+      "category": "validation"
+    },
+    "create-pull-request": {
+      "file": "steps/create-pull-request.md",
+      "description": "Create or update a GitHub pull request",
+      "category": "delivery"
+    },
+    "update-jira": {
+      "file": "steps/update-jira.md",
+      "description": "Post summary and transition Jira ticket",
+      "category": "delivery"
+    },
+    "update-github-issue": {
+      "file": "steps/update-github-issue.md",
+      "description": "Post status update on GitHub issue",
+      "category": "delivery"
+    },
+    "commit-and-summarize": {
+      "file": "steps/commit-and-summarize.md",
+      "description": "Commit changes with a descriptive message and summary",
+      "category": "delivery"
+    },
+    "update-documentation": {
+      "file": "steps/update-documentation.md",
+      "description": "Update project documentation for changed behavior",
+      "category": "documentation"
+    },
+    "deploy-staging": {
+      "file": "steps/deploy-staging.md",
+      "description": "Deploy changes to a staging environment",
+      "category": "deployment"
+    }
+  }
+}

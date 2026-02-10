@@ -119,6 +119,7 @@ plugins/reflex/
 | `/reflex:guardrail` | Control destructive operation guardrails (on/off/status) |
 | `/reflex:ingest` | Ingest files into Qdrant |
 | `/reflex:update-mcp` | Check/apply MCP package updates |
+| `/reflex:workflow` | Manage workflow templates (apply/list/create/sync/compose/status) |
 | `/reflex:init` | Initialize MCP server credentials or project workflows |
 | `/reflex:handoff` | Generate handoff document for session continuation |
 | `/reflex:statusline` | Configure the Reflex status line (on/off/status/color) |

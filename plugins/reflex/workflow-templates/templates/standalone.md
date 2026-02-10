@@ -1,3 +1,27 @@
+---
+name: standalone
+version: "1.0.0"
+description: Standalone workflow without external ticket tracking
+tags: [standalone, simple, local]
+variables:
+  - name: test_command
+    description: Command to run the project's test suite
+    default: "the project's test suite"
+  - name: branch_strategy
+    description: Branch naming convention
+    default: ""
+  - name: require_plan_approval
+    description: Whether to require user approval before implementing
+    default: "true"
+steps:
+  - understand-requirements
+  - plan-implementation
+  - implement-changes
+  - self-review
+  - run-tests
+  - commit-and-summarize
+  - update-documentation
+---
 <!-- BEGIN: Project Workflow -->
 ## Project Workflow
 
@@ -15,11 +39,12 @@ This project uses a standalone development workflow. Follow these steps for ever
 - Read relevant source files to understand the current state
 - Identify affected files and components
 - Write a clear plan with numbered steps
-- Get user approval before proceeding
+{{#require_plan_approval}}- Get user approval before proceeding{{/require_plan_approval}}
 
 ### 3. Implement Changes
 
-- Follow existing code patterns and conventions in the project
+{{#branch_strategy}}- Create a {{branch_strategy}}
+{{/branch_strategy}}- Follow existing code patterns and conventions in the project
 - Make minimal, focused changes that address the requirements
 - Write or update tests alongside implementation
 - Keep commits atomic and well-scoped
@@ -33,7 +58,7 @@ This project uses a standalone development workflow. Follow these steps for ever
 
 ### 5. Run Tests
 
-- Run the project's test suite to verify nothing is broken
+- Run {{test_command}} to verify nothing is broken
 - Ensure new tests pass and cover the requirements
 - Fix any failures before proceeding
 

@@ -36,22 +36,41 @@ Read project context from the current working directory:
 
 ```bash
 CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-CONTEXT_FILE="$CONFIG_DIR/context.yaml"
 JOB_DIR="$CONFIG_DIR/jobs"
-WORKFLOW_DIR="$CONFIG_DIR/workflows"
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+CLAUDE_MD="${PROJECT_ROOT}/.claude/CLAUDE.md"
+PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"
+BUILTIN_STEPS="${PLUGIN_ROOT}/workflow-templates/steps"
+USER_STEPS="${CONFIG_DIR}/reflex/workflow-templates/steps"
 ```
 
 ### Load Project Context
 
-First, read `$CONFIG_DIR/context.yaml` to understand:
-- Project name and client
-- Ticket system (jira or github)
-- Workflow paths
-- Default behaviors
+Read the project's workflow manifest from `.claude/CLAUDE.md`:
+
+1. Find the `<!-- workflow-manifest: {...} -->` HTML comment after the `<!-- END: Project Workflow -->` sentinel
+2. Parse the JSON to extract: `template`, `source`, `version`, `variables`, `steps`
+3. This tells you:
+   - Which template the project uses (e.g., `jira-driven`, `github-driven`)
+   - The ticket system implied by the template
+   - The workflow steps to execute
+   - Variable bindings (e.g., `test_command`, `ticket_prefix`)
+
+If no manifest is found but sentinels exist, this is a legacy workflow — follow the inline instructions directly.
+
+If no workflow is configured at all, use `AskUserQuestion` to ask the user if they want to set one up via `/reflex:workflow apply`.
+
+### Step Resolution
+
+Steps are resolved from:
+- Built-in: `${BUILTIN_STEPS}/<step-name>.md`
+- User-defined: `${USER_STEPS}/<step-name>.md`
+
+Read the step's `steps:` list from the manifest and resolve each step file in order.
 
 ## Workflow Routing
 
-Load routing from `$WORKFLOW_DIR/routing-index.yaml`:
+Route to the appropriate workflow based on the project's manifest template:
 
 1. Match user input against trigger patterns
 2. Select appropriate workflow

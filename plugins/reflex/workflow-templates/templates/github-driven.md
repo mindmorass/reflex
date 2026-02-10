@@ -1,3 +1,27 @@
+---
+name: github-driven
+version: "1.0.0"
+description: GitHub issue-driven development workflow with PR integration
+tags: [github, issues, pull-requests]
+variables:
+  - name: test_command
+    description: Command to run the project's test suite
+    default: "the project's test suite"
+  - name: branch_strategy
+    description: Branch naming convention
+    default: "feature branch from main"
+  - name: require_plan_approval
+    description: Whether to require user approval before implementing
+    default: "true"
+steps:
+  - fetch-github-issue
+  - plan-implementation
+  - implement-changes
+  - self-review
+  - run-tests
+  - create-pull-request
+  - update-documentation
+---
 <!-- BEGIN: Project Workflow -->
 ## Project Workflow
 
@@ -16,11 +40,11 @@ This project uses a GitHub-driven development workflow. Follow these steps for e
 - Read relevant source files to understand the current state
 - Identify affected files and components
 - Write a clear plan with numbered steps
-- Get user approval before proceeding
+{{#require_plan_approval}}- Get user approval before proceeding{{/require_plan_approval}}
 
 ### 3. Implement Changes
 
-- Create a feature branch from the main branch
+- Create a {{branch_strategy}}
 - Follow existing code patterns and conventions in the project
 - Make minimal, focused changes that address the issue requirements
 - Write or update tests alongside implementation
@@ -35,7 +59,7 @@ This project uses a GitHub-driven development workflow. Follow these steps for e
 
 ### 5. Run Tests
 
-- Run the project's test suite to verify nothing is broken
+- Run {{test_command}} to verify nothing is broken
 - Ensure new tests pass and cover the acceptance criteria
 - Fix any failures before proceeding
 

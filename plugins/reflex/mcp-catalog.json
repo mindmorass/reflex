@@ -201,6 +201,23 @@
           "USER_GOOGLE_EMAIL": "${USER_GOOGLE_EMAIL}"
         }
       }
+    },
+    "uptime-kuma": {
+      "description": "Uptime Kuma v2 monitoring — manage monitors, alerts, status pages, and maintenance",
+      "category": "cloud",
+      "url": "https://github.com/neverprepared/kuma_uptime_mcp",
+      "requires": ["UPTIME_KUMA_URL", "UPTIME_KUMA_USERNAME", "UPTIME_KUMA_PASSWORD"],
+      "definition": {
+        "command": "uvx",
+        "args": ["--python", "3.12", "mcp-uptime-kuma"],
+        "env": {
+          "UPTIME_KUMA_URL": "${UPTIME_KUMA_URL:-http://localhost:3001}",
+          "UPTIME_KUMA_USERNAME": "${UPTIME_KUMA_USERNAME}",
+          "UPTIME_KUMA_PASSWORD": "${UPTIME_KUMA_PASSWORD}",
+          "UPTIME_KUMA_TOKEN": "${UPTIME_KUMA_TOKEN}",
+          "UPTIME_KUMA_MFA_TOKEN": "${UPTIME_KUMA_MFA_TOKEN}"
+        }
+      }
     }
   }
 }

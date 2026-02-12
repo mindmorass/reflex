@@ -209,7 +209,7 @@
       "requires": ["UPTIME_KUMA_URL", "UPTIME_KUMA_USERNAME", "UPTIME_KUMA_PASSWORD"],
       "definition": {
         "command": "uvx",
-        "args": ["--python", "3.12", "mcp-uptime-kuma"],
+        "args": ["--python", "3.12", "--from", "git+https://github.com/neverprepared/kuma_uptime_mcp.git", "mcp-uptime-kuma"],
         "env": {
           "UPTIME_KUMA_URL": "${UPTIME_KUMA_URL:-http://localhost:3001}",
           "UPTIME_KUMA_USERNAME": "${UPTIME_KUMA_USERNAME}",

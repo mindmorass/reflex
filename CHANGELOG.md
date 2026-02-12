@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0](https://github.com/mindmorass/reflex/compare/v1.7.2...v1.8.0) (2026-02-12)
+
+
+### Features
+
+* Add uptime-kuma to MCP server catalog ([d6de408](https://github.com/mindmorass/reflex/commit/d6de408ac3fa2a6311c6dd5c3f96e14f8f065802))
+* Add workflow template management system ([74487e8](https://github.com/mindmorass/reflex/commit/74487e8b259a2f830119852210e2cadfe014f4b2))
+
+
+### Bug Fixes
+
+* Install uptime-kuma MCP server from GitHub repo ([b87139c](https://github.com/mindmorass/reflex/commit/b87139cce65a122e6bed4f652fa250dcd78419d5))
+
 ## [1.7.2](https://github.com/mindmorass/reflex/compare/v1.7.1...v1.7.2) (2026-02-06)
 
 
